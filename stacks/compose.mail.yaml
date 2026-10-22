@@ -1,5 +1,8 @@
 name: mail
 
+# See compose.core.yaml - fails fast when .env isn't in scope.
+x-required-config: "${HOMELAB_DOMAIN:?HOMELAB_* missing from .env - run scripts/render.sh}"
+
 include:
   - ../services/mail/dovecot/compose.yaml
   - ../services/mail/imapsync/compose.yaml

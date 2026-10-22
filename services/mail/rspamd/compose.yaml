@@ -19,7 +19,7 @@ services:
       traefik.enable: true
       traefik.docker.network: proxy
 
-      traefik.http.routers.rspamd.rule: Host(`rspamd.rasputin.pi`)
+      traefik.http.routers.rspamd.rule: Host(`rspamd.${HOMELAB_DOMAIN}`)
       traefik.http.routers.rspamd.entrypoints: websecure
       traefik.http.routers.rspamd.tls: true
 
@@ -28,7 +28,7 @@ services:
       homepage.group: Mail
       homepage.name: Rspamd
       homepage.icon: rspamd
-      homepage.href: https://rspamd.rasputin.pi
+      homepage.href: https://rspamd.${HOMELAB_DOMAIN}
       homepage.description: Spam Filtering
 
   rspamd-redis:

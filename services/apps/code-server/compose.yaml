@@ -5,12 +5,12 @@ services:
     networks:
       - proxy
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${HOMELAB_PUID}
+      - PGID=${HOMELAB_PGID}
+      - TZ=${HOMELAB_TZ}
       - PASSWORD=${CODE_SERVER_PASSWORD:?error}
       - SUDO_PASSWORD=${CODE_SERVER_SUDO_PASSWORD:?error}
-      - PROXY_DOMAIN=code.rasputin.pi
+      - PROXY_DOMAIN=code.${HOMELAB_DOMAIN}
       - DEFAULT_WORKSPACE=/config/workspace
       - PWA_APPNAME=code-server
     volumes:
@@ -23,7 +23,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: proxy
 
-      traefik.http.routers.code-server.rule: Host(`code.rasputin.pi`)
+      traefik.http.routers.code-server.rule: Host(`code.${HOMELAB_DOMAIN}`)
       traefik.http.routers.code-server.entrypoints: websecure
       traefik.http.routers.code-server.tls: "true"
 
@@ -32,5 +32,5 @@ services:
       homepage.group: Tooling
       homepage.name: Code Server
       homepage.icon: coder-light
-      homepage.href: https://code.rasputin.pi
+      homepage.href: https://code.${HOMELAB_DOMAIN}
       homepage.description: Browser IDE

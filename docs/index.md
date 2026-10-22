@@ -25,11 +25,11 @@ Understanding the environment and deployed components:
 Managing and maintaining the environment:
 
 - [Environment Secrets](environment-secrets.md) — Managing encrypted environment configuration
-- [Homelab CLI](homelab-cli.md) — Command reference for managing stacks and services
+- [Komodo](komodo.md) — GitOps deployment layer and command reference (git is the authoritative config)
 - [Local Debugging](generated/local-debugging.md) — Local testing and debugging workflows
 
 ## Repository
 
 All source code, configuration files, and automation scripts are maintained in the GitHub repository:
 
-[github.com/MeridianGH/rasputin](https://github.com/MeridianGH/rasputin)
+[github.com/rmckr/rasputin](https://github.com/rmckr/rasputin)

@@ -1,5 +1,10 @@
 name: core
 
+# Fails the deploy instead of rendering empty hostnames when .env isn't in
+# scope. Komodo passes --env-file .env when the stack's run directory is the
+# repo root and its env file path is .env (the default).
+x-required-config: "${HOMELAB_DOMAIN:?HOMELAB_* missing from .env - run scripts/render.sh}"
+
 include:
   - ../services/core/pihole/compose.yaml
   - ../services/core/traefik/compose.yaml

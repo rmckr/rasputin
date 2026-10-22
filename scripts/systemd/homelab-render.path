@@ -1,0 +1,17 @@
+[Unit]
+Description=Watch Rasputin secrets and templates, re-render on change
+
+[Path]
+# Fires when Komodo (or a human) pulls new secrets or template changes.
+# Paths assume the repo location hardcoded in komodo/compose.yaml;
+# adjust if the clone path differs.
+PathChanged=/etc/komodo/repos/rasputin/.env.enc
+# Rewritten on every git fetch/pull, so this catches secret/template
+# changes at any depth (the templates watches below are non-recursive).
+PathChanged=/etc/komodo/repos/rasputin/.git/FETCH_HEAD
+PathChanged=/etc/komodo/repos/rasputin/templates
+PathModified=/etc/komodo/repos/rasputin/templates
+Unit=homelab-render.service
+
+[Install]
+WantedBy=multi-user.target

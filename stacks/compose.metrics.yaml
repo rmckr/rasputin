@@ -1,5 +1,8 @@
 name: metrics
 
+# See compose.core.yaml - fails fast when .env isn't in scope.
+x-required-config: "${HOMELAB_DOMAIN:?HOMELAB_* missing from .env - run scripts/render.sh}"
+
 include:
   - ../services/metrics/grafana/compose.yaml
   - ../services/metrics/influxdb/compose.yaml

@@ -35,7 +35,7 @@ services:
 
       traefik.enable: "true"
 
-      traefik.http.routers.traefik.rule: Host(`traefik.rasputin.pi`)
+      traefik.http.routers.traefik.rule: Host(`traefik.${HOMELAB_DOMAIN}`)
       traefik.http.routers.traefik.service: api@internal
       traefik.http.routers.traefik.entrypoints: websecure
       traefik.http.routers.traefik.tls: "true"
@@ -52,7 +52,7 @@ services:
       homepage.group: Network
       homepage.name: Traefik
       homepage.icon: traefik
-      homepage.href: https://traefik.rasputin.pi
+      homepage.href: https://traefik.${HOMELAB_DOMAIN}
       homepage.description: Reverse Proxy
 
       homepage.widget.type: traefik

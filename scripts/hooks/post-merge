@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Git hook: re-render .env and .runtime/ after pulling secret or
+# template changes. Install with:
+#   ln -s ../../scripts/hooks/post-merge .git/hooks/post-merge
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+"$REPO_ROOT/scripts/render.sh"

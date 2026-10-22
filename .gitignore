@@ -1,9 +1,16 @@
 # Environment variables and secrets
 .env
 .runtime/
+komodo/compose.env
 
 # Application data
 data/
+
+# Only the CA *cert* is committed (public config, served by cert-server).
+# Keys and serials are secrets/local state and must never land here.
+services/apps/cert-server/ca/*.key
+services/apps/cert-server/ca/*.srl
+services/apps/cert-server/ca/*.pem
 
 # Dynamically generated docs
 docs/generated/

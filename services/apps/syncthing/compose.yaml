@@ -4,9 +4,9 @@ services:
     container_name: syncthing
     hostname: syncthing-docker
     environment:
-      PUID: "1000"
-      PGID: "1000"
-      TZ: "Europe/Berlin"
+      PUID: "${HOMELAB_PUID}"
+      PGID: "${HOMELAB_PGID}"
+      TZ: "${HOMELAB_TZ}"
     volumes:
       - ../../../data/syncthing:/config
       - /mnt/nas/syncthing:/data
@@ -21,7 +21,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
 
-      traefik.http.routers.syncthing.rule: "Host(`syncthing.rasputin.pi`)"
+      traefik.http.routers.syncthing.rule: "Host(`syncthing.${HOMELAB_DOMAIN}`)"
       traefik.http.routers.syncthing.entrypoints: "websecure"
       traefik.http.routers.syncthing.tls: "true"
 
@@ -30,7 +30,7 @@ services:
       homepage.group: Apps
       homepage.name: Syncthing
       homepage.icon: syncthing
-      homepage.href: https://syncthing.rasputin.pi
+      homepage.href: https://syncthing.${HOMELAB_DOMAIN}
       homepage.description: File Synchronization
 
 networks:

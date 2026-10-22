@@ -1,0 +1,42 @@
+name: networks
+
+# Bootstrap stack: creates every Docker network referenced as external by
+# the other stacks. Deploy it BEFORE everything else - Komodo's own core
+# joins `proxy`, and compose refuses to start without it.
+#
+# docker compose up needs at least one service, and only creates networks
+# a service actually joins - hence the one-shot init container that joins
+# all six and exits. In Komodo, add `networks-init` to this stack's
+# "Ignore Services", otherwise the exited container marks it unhealthy.
+#
+# Note: if these networks already exist but were created outside compose
+# (e.g. by the old `homelab networks` script), compose fails with an
+# "incorrect label" error. Remove the stale ones first while nothing is
+# running: docker network rm proxy dns pihole mail_filter mail_archive metrics
+
+services:
+  networks-init:
+    image: busybox:1.37
+    command: ["true"]
+    restart: "no"
+    networks:
+      - proxy
+      - dns
+      - pihole
+      - mail_filter
+      - mail_archive
+      - metrics
+
+networks:
+  proxy:
+    name: proxy
+  dns:
+    name: dns
+  pihole:
+    name: pihole
+  mail_filter:
+    name: mail_filter
+  mail_archive:
+    name: mail_archive
+  metrics:
+    name: metrics

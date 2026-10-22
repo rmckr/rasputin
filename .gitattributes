@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# SOPS-encrypted files must keep exact bytes; CRLF conversion breaks decryption
+*.enc -text

@@ -1,0 +1,10 @@
+[Unit]
+Description=Decrypt .env.enc (SOPS) and render templates to .runtime/
+After=network.target
+
+[Service]
+Type=oneshot
+# Adjust if your age key lives elsewhere; render.sh defaults to
+# ~/.config/age/key.txt of the calling user (root here).
+Environment=SOPS_AGE_KEY_FILE=/root/.config/age/key.txt
+ExecStart=/bin/bash /etc/komodo/repos/rasputin/scripts/render.sh

@@ -1,5 +1,8 @@
 name: apps
 
+# See compose.core.yaml - fails fast when .env isn't in scope.
+x-required-config: "${HOMELAB_DOMAIN:?HOMELAB_* missing from .env - run scripts/render.sh}"
+
 include:
   - ../services/apps/cert-server/compose.yaml
   - ../services/apps/code-server/compose.yaml

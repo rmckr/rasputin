@@ -1,0 +1,236 @@
+---
+# Provisions a Debian host into the rasputin homelab node:
+#   Docker + compose plugin, sops (pinned + checksum), age, envsubst,
+#   repo clone at Komodo's clone path, age keys, rendered secrets,
+#   the homelab-render path unit + git hook, the `networks` bootstrap
+#   stack, and Komodo itself.
+#
+# NOT covered (on purpose): data/ migration from the old host, creating
+# the stack resources (do that in the Komodo UI), VM networking.
+#
+# Run from anywhere with ssh access to the host:   ansible-playbook site.yml
+# Or from the host itself:                          ansible-playbook site.yml -i 'localhost,' -c local
+- name: Bootstrap rasputin homelab host
+  hosts: all
+  become: true
+
+  vars:
+    repo_dir: /etc/komodo/repos/rasputin
+    homelab_user: lukas
+    # Where the age key lives on the machine the playbook runs FROM.
+    # It is copied to the target (root + user); never comes from git.
+    age_key_source: "{{ lookup('env', 'HOME') }}/.config/age/key.txt"
+    # sops is not packaged in Debian; install the official binary.
+    sops_version: "3.13.3"
+    sops_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+
+  tasks:
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - git
+          - gettext-base # envsubst (templates/)
+          - age # age backend for sops
+          - python3
+          # Required by ansible.builtin.deb822_repository below; a fresh
+          # Debian host does not ship it, and the module hard-fails without.
+          - python3-debian
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Ensure apt keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Add Docker apt signing key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/debian/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Add Docker apt repository
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: deb
+        uris: https://download.docker.com/linux/debian
+        suites: "{{ ansible_distribution_release }}"
+        components:
+          - stable
+        architectures: "{{ sops_arch }}"
+        signed_by: /etc/apt/keyrings/docker.asc
+        state: present
+
+    - name: Refresh apt cache after adding Docker repo
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Docker engine and compose plugin
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Enable Docker
+      ansible.builtin.systemd_service:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Install sops binary (verified against the official checksums file)
+      ansible.builtin.get_url:
+        url: "https://github.com/getsops/sops/releases/download/v{{ sops_version }}/sops-v{{ sops_version }}.linux.{{ sops_arch }}"
+        dest: /usr/local/bin/sops
+        checksum: "sha256url=https://github.com/getsops/sops/releases/download/v{{ sops_version }}/sops-v{{ sops_version }}.checksums.txt"
+        mode: "0755"
+
+    - name: Ensure homelab user exists
+      ansible.builtin.user:
+        name: "{{ homelab_user }}"
+        create_home: true
+        groups: sudo, docker
+        append: true
+
+    - name: Configure sysctl (WireGuard, container networking, Matter RA)
+      ansible.builtin.copy:
+        content: |
+          # rasputin homelab
+          # IP packet forwarding (WireGuard, containers)
+          net.ipv4.ip_forward = 1
+          net.ipv6.conf.all.forwarding = 1
+          # Re-enable Router Advertisements (Home Assistant Matter)
+          net.ipv6.conf.all.accept_ra = 2
+          # Policy-based routing (WireGuard)
+          net.ipv4.conf.all.src_valid_mark = 1
+        dest: /etc/sysctl.d/99-homelab.conf
+        mode: "0644"
+      notify: Apply sysctl
+
+    - name: Clone repository (this is the path Komodo's periphery pulls)
+      ansible.builtin.git:
+        repo: https://github.com/rmckr/rasputin.git
+        dest: "{{ repo_dir }}"
+        version: main
+        force: true # gitops: local tracked changes are not the source of truth
+
+    - name: Repository owned by homelab user
+      ansible.builtin.file:
+        path: "{{ repo_dir }}"
+        owner: "{{ homelab_user }}"
+        group: "{{ homelab_user }}"
+        recurse: true
+
+    - name: Ensure age key directories exist
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner }}"
+        group: "{{ item.owner }}"
+        mode: "0700"
+      loop:
+        - { path: /root/.config/age, owner: root }
+        - { path: "/home/{{ homelab_user }}/.config/age", owner: "{{ homelab_user }}" }
+
+    - name: Deploy age key (root for unit+playbook, user for manual use)
+      ansible.builtin.copy:
+        src: "{{ age_key_source }}"
+        dest: "{{ item }}"
+        mode: "0600"
+      loop:
+        - /root/.config/age/key.txt
+        - "/home/{{ homelab_user }}/.config/age/key.txt"
+      no_log: true
+
+    - name: Ensure repo scripts are executable (git may record them 644)
+      ansible.builtin.file:
+        path: "{{ repo_dir }}/{{ item }}"
+        mode: "0755"
+      loop:
+        - scripts/render.sh
+        - scripts/hooks/post-merge
+
+    - name: Render secrets (.env, .runtime/)
+      ansible.builtin.command: bash scripts/render.sh
+      args:
+        chdir: "{{ repo_dir }}"
+      environment:
+        SOPS_AGE_KEY_FILE: /root/.config/age/key.txt
+      changed_when: false # idempotent re-render; the path unit owns freshness
+
+    - name: Link render automation units
+      ansible.builtin.file:
+        src: "{{ repo_dir }}/{{ item }}"
+        dest: "/etc/systemd/system/{{ item | basename }}"
+        state: link
+        force: true
+      loop:
+        - scripts/systemd/homelab-render.path
+        - scripts/systemd/homelab-render.service
+      notify: Reload systemd
+
+    - name: Link post-merge git hook (covers manual git pulls)
+      ansible.builtin.file:
+        src: ../../scripts/hooks/post-merge
+        dest: "{{ repo_dir }}/.git/hooks/post-merge"
+        state: link
+        force: true
+
+    - name: Enable render path unit
+      ansible.builtin.systemd_service:
+        name: homelab-render.path
+        enabled: true
+        state: started
+        daemon_reload: true
+
+    - name: Create shared networks (bootstrap stack)
+      ansible.builtin.command: docker compose -f stacks/compose.networks.yaml up -d
+      args:
+        chdir: "{{ repo_dir }}"
+      register: nets
+      changed_when: "'Created' in nets.stdout or 'Started' in nets.stdout"
+
+    - name: Decrypt Komodo bootstrap env
+      # --input-type is required: without it sops guesses JSON from the
+      # .enc suffix and dies with "Could not unmarshal input data".
+      ansible.builtin.command: >-
+        sops --decrypt --input-type dotenv --output-type dotenv
+        --output komodo/compose.env komodo/compose.env.enc
+      args:
+        chdir: "{{ repo_dir }}"
+      environment:
+        SOPS_AGE_KEY_FILE: /root/.config/age/key.txt
+      changed_when: false
+
+    - name: Deploy Komodo
+      # .env (rendered, carries HOMELAB_*), then Komodo's own secrets.
+      ansible.builtin.command: >-
+        docker compose -p komodo -f komodo/compose.yaml
+        --env-file .env --env-file komodo/compose.env up -d
+      args:
+        chdir: "{{ repo_dir }}"
+      register: komodo
+      changed_when: "'Started' in komodo.stdout or 'Created' in komodo.stdout"
+
+    - name: Wait for Komodo core API
+      ansible.builtin.wait_for:
+        port: 9120
+        delay: 5
+        timeout: 180
+
+  handlers:
+    - name: Apply sysctl
+      ansible.builtin.command: sysctl --system
+      changed_when: true
+
+    - name: Reload systemd
+      ansible.builtin.systemd_service:
+        daemon_reload: true

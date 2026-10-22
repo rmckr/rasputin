@@ -15,7 +15,7 @@ services:
       traefik.enable: "true"
       traefik.http.services.homeassistant.loadbalancer.server.port: 8123
 
-      traefik.http.routers.ha-internal.rule: Host(`home.rasputin.pi`)
+      traefik.http.routers.ha-internal.rule: Host(`home.${HOMELAB_DOMAIN}`)
       traefik.http.routers.ha-internal.entrypoints: websecure
       traefik.http.routers.ha-internal.tls: "true"
       traefik.http.routers.ha-internal.service: homeassistant
@@ -31,7 +31,7 @@ services:
       homepage.group: Apps
       homepage.name: Home Assistant
       homepage.icon: home-assistant
-      homepage.href: https://home.rasputin.pi
+      homepage.href: https://home.${HOMELAB_DOMAIN}
       homepage.description: Home Automation
 
   # matter-server:
@@ -58,7 +58,7 @@ services:
     volumes:
       - "../../../data/matterjs-server:/data"
     environment:
-      PRIMARY_INTERFACE: eth0
+      PRIMARY_INTERFACE: ${HOMELAB_LAN_INTERFACE}
     labels:
       docs.description: "Used for matter support, in the same compose file as homeassistant"
       

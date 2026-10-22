@@ -1,5 +1,9 @@
 # Initial setup
 
+> This guide targets the Raspberry Pi. For an x86 host (e.g. a Proxmox
+> VM guest), use the Ansible playbook in `ansible/` — it covers the same
+> steps (USB quirks aside) and is kept up to date.
+
 ## Network setup
 The Docker host requires a static IPv4 and IPv6.
 Since the homelab uses Pi-hole as its DNS server, the Docker host itself needs the router as a static DNS server:

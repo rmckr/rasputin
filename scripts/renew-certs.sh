@@ -1,17 +1,30 @@
 #!/bin/bash
 # renew-certs.sh
-# Auto-renews rasputin.pi TLS certificate signed by rasputinCA
+# Auto-renews the homelab wildcard certificate for ${HOMELAB_DOMAIN},
+# signed by the local CA (rasputinCA).
 # Usage: ./renew-certs.sh [--force]
 
-ROOT_DIR="../data/certs"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Shared config (HOMELAB_DOMAIN) lives in the decrypted .env next to the
+# repo root; render.sh produces it.
+# shellcheck disable=SC1091
+set -a; source "$SCRIPT_DIR/../.env"; set +a
+
+ROOT_DIR="$SCRIPT_DIR/../data/certs"
 CERT_DIR="$ROOT_DIR/internal"
-DOMAIN="rasputin.pi"
+DOMAIN="${HOMELAB_DOMAIN:?error}"
 CERT="$CERT_DIR/$DOMAIN.crt"
 KEY="$CERT_DIR/$DOMAIN.key"
 CSR="$CERT_DIR/$DOMAIN.csr"
 SAN_CONF="$CERT_DIR/rasputin_san.cnf"
-CA_CERT="$ROOT_DIR/ca/rasputinCA.crt"
+# The CA cert is public config and lives in git (served by cert-server);
+# the CA key is a secret and stays under data/certs/ca, never committed.
+CA_CERT="$SCRIPT_DIR/../services/apps/cert-server/ca/rasputinCA.crt"
 CA_KEY="$ROOT_DIR/ca/rasputinCA.key"
+# -CAcreateserial writes the serial next to the CA cert, so pin it into
+# data/ rather than letting it appear in the repo.
+CA_SERIAL="$ROOT_DIR/ca/rasputinCA.srl"
 PEM="$CERT_DIR/$DOMAIN.pem"
 DAYS_LEFT=30   # Renew if less than 30 days left
 VALIDITY=825   # TLS certificate validity in days
@@ -23,7 +36,19 @@ if [ "$1" == "--force" ]; then
     echo "Force renewal enabled."
 fi
 
-mkdir -p "$CERT_DIR"
+mkdir -p "$CERT_DIR" "$ROOT_DIR/ca"
+
+# Fail early and legibly rather than mid-openssl.
+if [ ! -f "$CA_CERT" ]; then
+    echo "error: CA cert not found at $CA_CERT" >&2
+    echo "Copy the existing one into place: services/apps/cert-server/ca/rasputinCA.crt" >&2
+    exit 1
+fi
+if [ ! -f "$CA_KEY" ]; then
+    echo "error: CA key not found at $CA_KEY" >&2
+    echo "The CA key is not in git - migrate it from the old host (see ansible/README.md)." >&2
+    exit 1
+fi
 
 # Check if certificate exists and days left
 if [ -f "$CERT" ] && [ "$FORCE" -eq 0 ]; then
@@ -70,7 +95,7 @@ EOL
 
 # Sign CSR with CA
 openssl x509 -req -in "$CSR" \
-  -CA "$CA_CERT" -CAkey "$CA_KEY" -CAcreateserial \
+  -CA "$CA_CERT" -CAkey "$CA_KEY" -CAserial "$CA_SERIAL" -CAcreateserial \
   -out "$CERT" -days $VALIDITY -sha256 \
   -extfile "$SAN_CONF" -extensions v3_req
 

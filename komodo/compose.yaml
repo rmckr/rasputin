@@ -1,0 +1,123 @@
+# Fails the deploy instead of rendering an empty KOMODO_HOST when .env wasn't
+# passed to compose (ansible does this; add --env-file .env if you deploy by hand).
+x-required-config: "${HOMELAB_DOMAIN:?HOMELAB_* missing from .env - pass --env-file .env}"
+
+services:
+  mongo:
+    image: mongo:8
+    labels:
+      komodo.skip: # Prevent Komodo from stopping itself with StopAllContainers
+    command: --quiet --wiredTigerCacheSizeGB 0.25
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${KOMODO_DATABASE_USERNAME:?error}
+      MONGO_INITDB_ROOT_PASSWORD: ${KOMODO_DATABASE_PASSWORD:?error}
+
+  core:
+    # Komodo image tag (major), see https://github.com/moghtech/komodo/releases
+    image: ghcr.io/moghtech/komodo-core:2
+    init: true
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - 9120:9120
+    environment:
+      # ── Config (non-sensitive) ──
+      KOMODO_DATABASE_ADDRESS: mongo:27017
+      TZ: ${HOMELAB_TZ}
+      # Used for Oauth / webhook url suggestions
+      KOMODO_HOST: https://komodo.${HOMELAB_DOMAIN}
+      KOMODO_TITLE: Rasputin
+      KOMODO_LOCAL_AUTH: "true"
+      # Initial admin account created on first boot (change password after login)
+      KOMODO_INIT_ADMIN_USERNAME: admin
+      # Name of the first (local) server Periphery connects as;
+      # must match PERIPHERY_CONNECT_AS below
+      KOMODO_FIRST_SERVER_NAME: rasputin
+      KOMODO_JWT_TTL: 1-day
+      KOMODO_MONITORING_INTERVAL: 15-sec
+      KOMODO_RESOURCE_POLL_INTERVAL: 1-hr
+      # No self-signup on a fresh install
+      KOMODO_DISABLE_USER_REGISTRATION: "true"
+      # ── Secrets (from komodo/compose.env, see docs/komodo.md) ──
+      KOMODO_DATABASE_USERNAME: ${KOMODO_DATABASE_USERNAME:?error}
+      KOMODO_DATABASE_PASSWORD: ${KOMODO_DATABASE_PASSWORD:?error}
+      KOMODO_INIT_ADMIN_PASSWORD: ${KOMODO_INIT_ADMIN_PASSWORD:?error}
+      # Used to auth incoming webhooks (e.g. GitHub push -> stack redeploy)
+      KOMODO_WEBHOOK_SECRET: ${KOMODO_WEBHOOK_SECRET:?error}
+      # Used to generate JWTs
+      KOMODO_JWT_SECRET: ${KOMODO_JWT_SECRET:?error}
+    volumes:
+      # Core / Periphery communication keys (generated on first boot)
+      - keys:/config/keys
+      # Dated database backups - https://komo.do/docs/setup/backup
+      - /etc/komodo/backups:/backups
+    networks:
+      # default (compose-managed) is required to reach mongo:27017 -
+      # declaring `networks` drops the implicit default join.
+      # proxy: Traefik routing.
+      - default
+      - proxy
+    labels:
+      docs.description: "Komodo Core - GitOps deploy UI/API for all stacks. Deployed standalone, not managed by Komodo itself."
+
+      traefik.enable: "true"
+      traefik.docker.network: proxy
+
+      traefik.http.routers.komodo.rule: Host(`komodo.${HOMELAB_DOMAIN}`)
+      traefik.http.routers.komodo.entrypoints: websecure
+      traefik.http.routers.komodo.tls: "true"
+
+      traefik.http.services.komodo.loadbalancer.server.port: 9120
+
+      homepage.group: Tooling
+      homepage.name: Komodo
+      homepage.icon: komodo
+      homepage.href: https://komodo.${HOMELAB_DOMAIN}
+      homepage.description: GitOps Deployments
+
+  periphery:
+    image: ghcr.io/moghtech/komodo-periphery:2
+    init: true
+    restart: unless-stopped
+    depends_on:
+      - core
+    environment:
+      # Core / Periphery authentication is via the shared keys volume,
+      # no secrets needed here.
+      PERIPHERY_CORE_ADDRESS: ws://core:9120
+      # Must match KOMODO_FIRST_SERVER_NAME above
+      PERIPHERY_CONNECT_AS: rasputin
+      PERIPHERY_ROOT_DIRECTORY: /etc/komodo
+      # Whitelist a stable mount for accurate disk usage reporting
+      PERIPHERY_INCLUDE_DISK_MOUNTS: /etc/hostname
+    volumes:
+      # Core / Periphery communication keys
+      - keys:/config/keys
+      # Komodo runs docker compose through the host docker socket
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Allow Periphery to report host processes
+      - /proc:/proc
+      # Periphery root directory. All stack files / repos must live under it.
+      # The repo mount below keeps the same path inside and outside the
+      # container, so relative volume paths in service compose files
+      # (../../../data/...) resolve identically for the host docker daemon.
+      - /etc/komodo:/etc/komodo
+      # Clone of this repository, see docs/komodo.md
+      - /etc/komodo/repos/rasputin:/etc/komodo/repos/rasputin
+    labels:
+      docs.description: "Komodo Periphery agent - executes compose deployments for Komodo Core, sees this repo under /etc/komodo/repos/rasputin"
+
+volumes:
+  mongo-data:
+  mongo-config:
+  # Core / Periphery
+  keys:
+
+networks:
+  proxy:
+    external: true

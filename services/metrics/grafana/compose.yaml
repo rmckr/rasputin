@@ -20,7 +20,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: proxy
 
-      traefik.http.routers.grafana.rule: Host(`grafana.rasputin.pi`)
+      traefik.http.routers.grafana.rule: Host(`grafana.${HOMELAB_DOMAIN}`)
       traefik.http.routers.grafana.entrypoints: websecure
       traefik.http.routers.grafana.tls: "true"
 
@@ -29,7 +29,7 @@ services:
       homepage.group: Metrics
       homepage.name: Grafana
       homepage.icon: grafana
-      homepage.href: https://grafana.rasputin.pi
+      homepage.href: https://grafana.${HOMELAB_DOMAIN}
       homepage.description: Monitoring Dashboards
 
 networks:

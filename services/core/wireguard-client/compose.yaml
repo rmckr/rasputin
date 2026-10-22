@@ -7,9 +7,9 @@ services:
       - NET_ADMIN
       - SYS_MODULE
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${HOMELAB_PUID}
+      - PGID=${HOMELAB_PGID}
+      - TZ=${HOMELAB_TZ}
     volumes:
       - ../../../data/wireguard-client:/config
       - /lib/modules:/lib/modules:ro

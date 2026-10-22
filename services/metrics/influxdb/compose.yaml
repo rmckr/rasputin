@@ -32,7 +32,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: proxy
 
-      traefik.http.routers.influxdb.rule: Host(`influxdb.rasputin.pi`)
+      traefik.http.routers.influxdb.rule: Host(`influxdb.${HOMELAB_DOMAIN}`)
       traefik.http.routers.influxdb.entrypoints: websecure
       traefik.http.routers.influxdb.tls: "true"
 
@@ -41,7 +41,7 @@ services:
       homepage.group: Metrics
       homepage.name: InfluxDB
       homepage.icon: influxdb
-      homepage.href: https://influxdb.rasputin.pi
+      homepage.href: https://influxdb.${HOMELAB_DOMAIN}
       homepage.description: Metrics Database
 
 networks:

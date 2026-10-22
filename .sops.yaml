@@ -1,0 +1,35 @@
+---
+# SOPS configuration for Rasputin.
+# Encrypts with the same age keys previously used for .env.enc.
+# Recipients: primary age key + offline recovery key (see docs/environment-secrets.md).
+#
+# NOTE: creation rules are matched top-down and the first match wins.
+# `\.env$` also matches `komodo/compose.env`, so the specific rule MUST
+# come first - otherwise the Komodo env file silently picks up the .env rule.
+creation_rules:
+  # Komodo bootstrap env (plaintext file is komodo/compose.env).
+  # Everything here is a secret, so no unencrypted_regex: fully encrypted.
+  - path_regex: komodo/compose\.env$
+    age: >-
+      age15etzrgqhxedapvpx2y3as9evc39zv25lltn78r2m2l9k2hupaq6qf05wa7,
+      age17gjk76j9qempqsyhsjzraq8zkas2r64nc2ulcv04rkkcjvzd9dkq3gyez9
+
+  # Matches the plaintext .env being encrypted to .env.enc.
+  #
+  # unencrypted_regex is an ALLOW-list, the inverse of encrypted_regex:
+  # keys matching it stay readable, everything else is sealed. Only the
+  # HOMELAB_* block - domain, IPs, router, timezone, PUID/PGID, LAN
+  # interface - is left in the clear so `git diff` on .env.enc shows real
+  # config changes. Every credential is sealed by default, including any
+  # new key added later; extend the regex only for non-secret config.
+  #
+  # The MAC still covers the plaintext values: editing one in .env.enc
+  # makes `sops --decrypt` fail with a MAC mismatch.
+  #
+  # Note comments are always encrypted by sops in dotenv files, whatever
+  # the regex says - `^#` does nothing here, so it is not worth carrying.
+  - path_regex: \.env$
+    unencrypted_regex: '^HOMELAB_'
+    age: >-
+      age15etzrgqhxedapvpx2y3as9evc39zv25lltn78r2m2l9k2hupaq6qf05wa7,
+      age17gjk76j9qempqsyhsjzraq8zkas2r64nc2ulcv04rkkcjvzd9dkq3gyez9

@@ -59,7 +59,7 @@ The host is responsible for:
 - Running Docker and Docker Compose
 - Hosting all application stacks
 - Providing shared networking between services
-- Executing infrastructure management commands through `homelab.sh`
+- Executing infrastructure management commands through Komodo
 
 The infrastructure is designed to be reproducible through configuration files and automation rather than relying on manual host configuration.
 
@@ -69,9 +69,11 @@ The infrastructure is designed to be reproducible through configuration files an
 The infrastructure is defined as code:
 
 - Docker Compose files define running services
+- A `networks` bootstrap stack creates the shared external Docker networks
 - Templates provide generated configuration
-- Encrypted environment files provide secrets
-- `homelab.sh` provides the operational interface
+- SOPS-encrypted environment files provide secrets
+- Komodo deploys the stacks from git; `scripts/render.sh` (auto-triggered by a
+  systemd path unit and a git hook) decrypts secrets and renders templates
 
 The complete environment can be recreated from the repository contents and required secrets.
 
@@ -81,6 +83,6 @@ The architecture prioritizes:
 
 - **Reproducibility** — infrastructure is defined through version-controlled configuration
 - **Modularity** — services are grouped into independent stacks
-- **Maintainability** — common operations are handled through a single CLI
+- **Maintainability** — common operations are handled through Komodo
 - **Isolation** — services communicate through controlled networks
 - **Simplicity** — a single host keeps the environment easy to understand and operate

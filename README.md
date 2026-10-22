@@ -3,12 +3,15 @@
 A personal homelab repository for managing and documenting home infrastructure and services.
 
 ## Full documentation
-[Documentation](https://MeridianGH.github.io/rasputin/)
+[Documentation](https://rmckr.github.io/rasputin/)
 
 ## Project structure
 File structure
 ```
 homelab/
+├── ansible/
+│   ├── site.yml
+│   └── ...
 ├── data/
 │   ├── influxdb/
 │   │   └── ...

@@ -1,9 +1,9 @@
 site_name: Rasputin
 site_description: A personal homelab repository for managing and documenting home infrastructure and services.
-site_url: https://MeridianGH.github.io/rasputin/
+site_url: https://rmckr.github.io/rasputin/
 
-repo_url: https://github.com/MeridianGH/rasputin
-repo_name: MeridianGH/rasputin
+repo_url: https://github.com/rmckr/rasputin
+repo_name: rmckr/rasputin
 
 theme:
   name: material
@@ -40,5 +40,5 @@ nav:
 
   - Operations:
     - Environment Secrets: environment-secrets.md
-    - Homelab CLI: homelab-cli.md
+    - Komodo: komodo.md
     - Local debugging: generated/local-debugging.md

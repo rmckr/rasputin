@@ -1,0 +1,8 @@
+---
+# The homelab host: a Debian guest, e.g. under Proxmox.
+# Set ansible_host to the guest's IP before running.
+homelab:
+  hosts:
+    rasputin:
+      ansible_host: 192.168.188.2
+# homelab_user (default: lukas) can be overridden here or via -e.

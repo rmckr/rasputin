@@ -14,7 +14,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: proxy
 
-      traefik.http.routers.dockhand.rule: Host(`dockhand.rasputin.pi`)
+      traefik.http.routers.dockhand.rule: Host(`dockhand.${HOMELAB_DOMAIN}`)
       traefik.http.routers.dockhand.entrypoints: websecure
       traefik.http.routers.dockhand.tls: "true"
 
@@ -23,7 +23,7 @@ services:
       homepage.group: Tooling
       homepage.name: Dockhand
       homepage.icon: dockhand
-      homepage.href: https://dockhand.rasputin.pi
+      homepage.href: https://dockhand.${HOMELAB_DOMAIN}
       homepage.description: Docker Management
 
       homepage.widget.type: dockhand

@@ -6,6 +6,12 @@ from typing import Dict, List, Any
 from jinja2 import Environment, FileSystemLoader
 import sys
 
+# Windows consoles default to a legacy codepage (e.g. cp1252), which
+# cannot encode the checkmarks this script prints. Force UTF-8 output so
+# it also runs on Windows, not just UTF-8 Linux hosts/CI.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 
 class ComposeParser:
     """Parse docker-compose files and extract service metadata."""
@@ -62,7 +68,7 @@ class ComposeParser:
     def _parse_compose(self, service_name: str, compose_path: Path) -> Dict[str, Any]:
         """Parse a single compose.yaml file."""
         try:
-            with open(compose_path) as f:
+            with open(compose_path, encoding="utf-8") as f:
                 compose = yaml.safe_load(f)
         except Exception as e:
             print(f"Warning: Failed to parse {compose_path}: {e}", file=sys.stderr)
@@ -192,7 +198,7 @@ def main():
 
         content = template.render(**data)
 
-        output_path.write_text(content)
+        output_path.write_text(content, encoding="utf-8")
         print(f"✓ Generated {output_path}")
     
     # Build data for template

@@ -6,7 +6,12 @@ services:
     networks:
       - proxy
     volumes:
-      - ../../../data/certs/ca/rasputinCA.crt:/cert/rasputinCA.crt:ro
+      # The CA cert is public config (clients must download and trust it),
+      # so it lives in git under ./ca and is served straight from here.
+      # The CA *key* stays under data/certs/ca and is never committed.
+      # Mount the directory, not the file: if the file were missing, Docker
+      # would silently create an empty directory in its place.
+      - ./ca:/cert:ro
     restart: unless-stopped
     labels:
       docs.description: "Tiny web server that allows LAN clients to download local CA certs for trusting traefik"
@@ -14,7 +19,7 @@ services:
       traefik.enable: true
       traefik.docker.network: proxy
 
-      traefik.http.routers.cert-server.rule: Host(`certs.rasputin.pi`)
+      traefik.http.routers.cert-server.rule: Host(`certs.${HOMELAB_DOMAIN}`)
       traefik.http.routers.cert-server.entrypoints: websecure
       traefik.http.routers.cert-server.tls: true
 
@@ -23,7 +28,7 @@ services:
       homepage.group: Tooling
       homepage.name: Certificate Server
       homepage.icon: mdi-certificate
-      homepage.href: https://certs.rasputin.pi
+      homepage.href: https://certs.${HOMELAB_DOMAIN}
       homepage.description: Local CA Certificates
 
 networks:

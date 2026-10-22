@@ -9,7 +9,7 @@ services:
       - ./config:/app/config
       - ./images:/app/public/images:ro
     environment:
-      HOMEPAGE_ALLOWED_HOSTS: rasputin.pi
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMELAB_DOMAIN}
     restart: unless-stopped
     labels:
       docs.description: "Homepage for displaying all Docker services running in the homelab, host networking mode"
@@ -17,7 +17,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: proxy
 
-      traefik.http.routers.homepage.rule: Host(`rasputin.pi`)
+      traefik.http.routers.homepage.rule: Host(`${HOMELAB_DOMAIN}`)
       traefik.http.routers.homepage.entrypoints: websecure
       traefik.http.routers.homepage.tls: "true"
 
