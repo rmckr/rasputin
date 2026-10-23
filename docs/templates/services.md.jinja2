@@ -1,39 +1,20 @@
 # Stacks & Services
 
+Generated from the `docs.description` labels in the compose files
+(`scripts/docs/generate.py`).
+
 ## Core
-
-The core stack provides foundational services required by other components.
-
-Responsibilities include:
-
-- Reverse proxy functionality
-- Internal networking services
-- Shared infrastructure components
-
-Other stacks depend on services provided by this layer.
 
 {{ core_table }}
 
 ## Apps
 
-The apps stack contains user-facing self-hosted applications.
-
-Applications are exposed through the reverse proxy and use the shared Docker networking infrastructure.
-
 {{ apps_table }}
 
 ## Mail
 
-The mail stack contains mail-related infrastructure.
-
-Mail services integrate with the core networking layer and are exposed where required through the reverse proxy.
-
 {{ mail_table }}
 
 ## Metrics
-
-The metrics stack provides monitoring and visibility into the environment.
-
-It operates independently from application workloads while connecting to the shared Docker networking layer.
 
 {{ metrics_table }}

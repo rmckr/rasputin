@@ -41,4 +41,5 @@ nav:
   - Operations:
     - Environment Secrets: environment-secrets.md
     - Komodo: komodo.md
+    - Testing: testing.md
     - Local debugging: generated/local-debugging.md

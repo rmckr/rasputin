@@ -1,44 +1,22 @@
 # Rasputin
 
-A personal homelab repository for managing and documenting home infrastructure and services.
+Personal homelab: one Debian host running Docker stacks (Traefik, Pi-hole +
+Unbound, mail archival, metrics, apps), deployed from git by
+[Komodo](https://komo.do), secrets sealed with SOPS/age.
 
-## Full documentation
-[Documentation](https://rmckr.github.io/rasputin/)
+- Docs: https://rmckr.github.io/rasputin/
+- Bootstrap: `ansible/` provisions a fresh Debian host (see `ansible/README.md`)
+- Secrets: `.env` (plaintext, local) ↔ `.env.enc` (committed) —
+  `docs/environment-secrets.md`
 
-## Project structure
-File structure
+## Layout
+
 ```
-homelab/
-├── ansible/
-│   ├── site.yml
-│   └── ...
-├── data/
-│   ├── influxdb/
-│   │   └── ...
-│   └── ...
-├── services/
-│   ├── apps/
-│   │   ├── cert-server/
-│   │   │   └── compose.yaml
-│   │   └── ...
-│   ├── core/
-│   │   └── ...
-│   ├── mail/
-│   │   └── ...
-│   └── metrics/
-│       └── ...
-├── stacks/
-│   ├── compose.apps.yaml
-│   ├── compose.core.yaml
-│   └── ...
-├── templates/
-│   ├── grafana/
-│   │   └── datasources.yml.tmpl
-│   └── ...
-├── .runtime/
-│   ├── grafana/
-│   │   └── datasources.yml
-│   └── ...
-└── .env
+ansible/     host bootstrap playbook
+komodo/      Komodo deployment (standalone) + stack declarations (resources/stacks.toml)
+services/    one directory per service: compose.yaml + config
+stacks/      stack entrypoints, `include:` the service compose files
+templates/   *.tmpl rendered into .runtime/ by scripts/render.sh
+scripts/     render.sh (SOPS + envsubst), renew-certs.sh, docs generator
+data/        runtime state, gitignored
 ```
-[Tree](https://tree.nathanfriend.com/?s=(%27options!(%27fancy!true~fullPath!fal9~trailingSlash!true~rootDot!fal9)~6!(%276!%27homelab7B*influxdb429rvices*appsAcert-9rverA0584core4mail4metricsA2stacks*5apps.8*5core.8*2templates3.tmpl*2.runtime3*2.env%27)~version!%271%27)*700%20%202...73*grafanaAB6s.yml4A...*5compo9.6source7%5Cn08yaml9seA*0Bdata%01BA987654320*)

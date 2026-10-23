@@ -1,40 +1,19 @@
 # Networking
 
-Services communicate through dedicated Docker networks.
+Six shared external Docker networks, created once by the `networks`
+bootstrap stack (`stacks/compose.networks.yaml`). Traefik reaches services
+through `proxy`; everything else communicates on its own fabric, so nothing
+is needlessly exposed.
 
-The main goals of this approach are:
-
-- Keep internal communication isolated
-- Allow services to discover each other without exposing unnecessary ports
-- Provide controlled access through the reverse proxy
-
-External traffic follows this path:
-
-```text
-Internet
-   |
-   v
-Router / Firewall
-   |
-   v
-Reverse Proxy
-   |
-   +--> Applications
-   |
-   +--> Mail Services
-```
-
-Internal service communication happens through Docker networks.
-
-## Networks
 | Network        | Purpose                                              |
 | -------------- | ---------------------------------------------------- |
 | `proxy`        | Traefik reaches every service that has a hostname    |
-| `dns`          | pihole → unbound upstream; rspamd → unbound resolver |
-| `pihole`       | pihole-influxdb-monitor → pihole API                 |
-| `mail_filter`  | rspamd ↔ rspamd-redis ↔ rspamd-iscan                 |
-| `mail_archive` | dovecot ↔ imapsync (fully isolated mail archive)     |
-| `metrics`      | influxdb ↔ grafana ↔ telegraf ↔ exporters            |
+| `dns`          | pihole -> unbound upstream; rspamd -> unbound resolver |
+| `pihole`       | pihole-influxdb-monitor -> pihole API                 |
+| `mail_filter`  | rspamd <-> rspamd-redis <-> rspamd-iscan             |
+| `mail_archive` | dovecot <-> imapsync (fully isolated mail archive)    |
+| `metrics`      | influxdb <-> grafana <-> telegraf <-> exporters       |
 
 ## Service memberships
+
 {{ service_memberships_table }}
