@@ -25,7 +25,11 @@ bash scripts/render.sh && git status --short .runtime/
 
 # Scripts and playbook parse:
 for s in scripts/*.sh scripts/docs/generate.sh; do bash -n "$s" && echo "OK $s"; done
-(cd ansible && ansible-playbook site.yml --syntax-check)
+(cd ansible && ansible-playbook site.yml --syntax-check)   # needs ansible: WSL on this setup
+
+# stacks.toml parses; docs templates render (both also run in CI):
+python -c "import tomllib; d = tomllib.load(open('komodo/resources/stacks.toml', 'rb')); assert len(d['stack']) == 5, d"   # python3 on Linux
+bash scripts/docs/generate.sh   # creates scripts/docs/.venv; needs a POSIX venv - WSL on this setup
 
 # Every ${VAR} referenced by compose files and templates exists in .env:
 comm -23 \
@@ -37,8 +41,10 @@ comm -23 \
 
 - Take a Proxmox snapshot of the target VM before anything.
 - Fresh Debian VM, any IP — it is disposable.
-- `ansible-playbook site.yml` end to end. It is idempotent; re-run until
-  clean, and read the first failure properly instead of patching around it.
+- `ansible-playbook site.yml -i inventory.yml -K` end to end (WSL flags
+  and `age_key_source` in `ansible/README.md`). It is idempotent; re-run
+  until clean, and read the first failure properly instead of patching
+  around it.
 - Deploy one low-risk stack by hand and check it in isolation, before
   DNS/Traefik are involved. Use the same project name Komodo will use,
   or you end up with two copies and colliding ports:

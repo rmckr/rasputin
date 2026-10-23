@@ -1,6 +1,5 @@
 ---
 # SOPS configuration for Rasputin.
-# Encrypts with the same age keys previously used for .env.enc.
 # Recipients: primary age key + offline recovery key (see docs/environment-secrets.md).
 #
 # One rule, one env file: the plaintext .env (config + all secrets,

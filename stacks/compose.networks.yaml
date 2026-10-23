@@ -7,9 +7,8 @@ name: networks
 # init container. In Komodo, list `networks-init` under "Ignore Services" or
 # the exited container marks the stack unhealthy.
 #
-# Networks created outside compose break `up` with "incorrect label" - remove
-# them first while nothing runs:
-#   docker network rm proxy dns pihole mail_filter mail_archive metrics
+# Networks created outside compose break `up` with "incorrect label";
+# removal procedure lives in docs/komodo.md (Bootstrap).
 
 services:
   networks-init:

@@ -65,7 +65,8 @@ Edit `inventory.yml` first (set the guest's IP). Then either:
 cd ansible
 ansible-playbook site.yml -i inventory.yml -K
 
-# ...or from the host itself:
+# ...or from the host itself (as root - become then needs no password,
+# hence no -K):
 scp ~/.config/age/key.txt root@<host>:/root/key.txt
 # on the host: apt install ansible, then
 ansible-playbook site.yml -i 'localhost,' -c local -e age_key_source=/root/key.txt

@@ -11,8 +11,8 @@ Components: `core` (UI/API on 9120, `https://komodo.<domain>` via Traefik),
 Periphery mounts the repo at the same path inside and outside the container
 (`/etc/komodo/repos/rasputin`), so the relative `../../../data/...` paths in
 the service compose files resolve for the host docker daemon. If you clone
-elsewhere, update the mount in `komodo/compose.yaml` plus the hardcoded
-paths in `scripts/systemd/` and `ansible/`.
+elsewhere, update the mount in `komodo/compose.yaml` plus the paths in
+`scripts/systemd/` (hardcoded) and `repo_dir` in `ansible/site.yml`.
 
 ## Bootstrap
 
@@ -64,8 +64,10 @@ Notes on the declarations:
 
 The systemd path unit `homelab-render.path` watches `.env.enc`,
 `templates/` and `.git/FETCH_HEAD` (rewritten on every fetch/pull) and runs
-`scripts/render.sh`. Install once — the unit runs as root, so root needs
-the age key too:
+`scripts/render.sh`. Skip this section when you bootstrapped with
+`ansible/` — it places root's age key and installs + enables the unit
+automatically. Otherwise install once; the unit runs as root, so root
+needs the age key too:
 
 ```bash
 cd /etc/komodo/repos/rasputin

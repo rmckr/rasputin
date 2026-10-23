@@ -9,10 +9,12 @@
 #   ansible-galaxy collection install -r requirements.yml
 #
 # NOT covered (on purpose): data/ migration from the old host, creating
-# the stack resources (do that in the Komodo UI), VM networking.
+# the stack resources (declared in komodo/resources/stacks.toml, applied
+# by Komodo's ResourceSync), VM networking.
 #
-# Run from anywhere with ssh access to the host:   ansible-playbook site.yml
-# Or from the host itself:                          ansible-playbook site.yml -i 'localhost,' -c local
+# Run (flags explained in ansible/README.md):
+#   control node:  ansible-playbook site.yml -i inventory.yml -K
+#   on the host:   ansible-playbook site.yml -i 'localhost,' -c local   (as root)
 - name: Bootstrap rasputin homelab host
   hosts: all
   become: true
