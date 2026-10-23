@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Decrypts .env.enc (SOPS/age) to .env and renders templates/*.tmpl
-# into .runtime/*. This is the only step Komodo cannot do natively.
-# Auto-triggered by scripts/systemd/homelab-render.path and the
-# post-merge git hook (scripts/hooks/post-merge); can be run manually.
+# Decrypts .env.enc (SOPS/age) to .env and renders templates/*.tmpl into
+# .runtime/. Auto-triggered by scripts/systemd/homelab-render.path (any git
+# fetch/pull or templates/ change); can be run manually.
 
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
@@ -32,8 +31,7 @@ if [[ ! -d "$TEMPLATES_DIR" ]]; then
 fi
 
 echo "==> Rendering templates"
-# .env carries both shared config and secrets (see .sops.yaml for which
-# keys are sealed); *.tmpl can reference either.
+# .env carries config and secrets; *.tmpl can reference either.
 set -a; source "$ENV_FILE"; set +a
 while IFS= read -r -d '' tmpl; do
   rel="${tmpl#"$TEMPLATES_DIR/"}"
