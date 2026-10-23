@@ -1,0 +1,105 @@
+# Komodo resource declarations, applied by a ResourceSync. Set the sync up
+# ONCE (Komodo -> Automate -> Sync Resources):
+#
+#   repo:            rmckr/rasputin
+#   branch:          main
+#   resource_path:   komodo/resources
+#
+# Afterwards this file is the source of truth: Komodo diffs it against what
+# exists and applies only the delta, so adding a stack is an edit and a push.
+# https://komo.do/docs/automate/sync-resources
+#
+# Gotchas:
+# - run_directory = "." is the repo root, i.e. where Periphery clones it
+#   (/etc/komodo/repos/rasputin); file_paths are relative to it.
+# - additional_env_files track = false: .env is written by scripts/render.sh
+#   (SOPS decrypt), not by Komodo - passed to compose as --env-file, never
+#   read, diffed or validated. Leave each stack's own Environment field
+#   empty: Komodo writes it to .env and would clobber the rendered secrets.
+# - Project name defaults to the stack name (-p networks, -p core, ...).
+#   Set project_name in [stack.config] to match a stack previously brought up
+#   by hand under a different name - otherwise Komodo deploys a second copy
+#   and the ports collide.
+# - git_account omitted: the repo is public. webhook_enabled is inert until
+#   the GitHub webhook exists.
+
+# 1. networks - deployed first; the rest join the networks it creates.
+[[stack]]
+name = "networks"
+description = "Shared external Docker networks (proxy, dns, pihole, mail_filter, mail_archive, metrics)"
+deploy = true
+tags = ["bootstrap"]
+[stack.config]
+server = "rasputin"
+repo = "rmckr/rasputin"
+branch = "main"
+run_directory = "."
+file_paths = ["stacks/compose.networks.yaml"]
+# One-shot container that exits right after creating the networks.
+ignore_services = ["networks-init"]
+additional_env_files = [{ path = ".env", track = false }]
+webhook_enabled = true
+
+# 2. core
+[[stack]]
+name = "core"
+description = "Traefik (edge proxy + certs), Pi-hole + Unbound (DNS), WireGuard client (+ wg-easy server, temporarily disabled)"
+deploy = true
+after = ["networks"]
+tags = ["core"]
+[stack.config]
+server = "rasputin"
+repo = "rmckr/rasputin"
+branch = "main"
+run_directory = "."
+file_paths = ["stacks/compose.core.yaml"]
+additional_env_files = [{ path = ".env", track = false }]
+webhook_enabled = true
+
+# 3. metrics
+[[stack]]
+name = "metrics"
+description = "InfluxDB, Grafana, Telegraf, WireGuard client exporter, Pi-hole monitor"
+deploy = true
+after = ["networks"]
+tags = ["observability"]
+[stack.config]
+server = "rasputin"
+repo = "rmckr/rasputin"
+branch = "main"
+run_directory = "."
+file_paths = ["stacks/compose.metrics.yaml"]
+additional_env_files = [{ path = ".env", track = false }]
+webhook_enabled = true
+
+# 4. mail
+[[stack]]
+name = "mail"
+description = "rspamd (+ ClamAV), Dovecot archive, imapsync"
+deploy = true
+after = ["networks"]
+tags = ["mail"]
+[stack.config]
+server = "rasputin"
+repo = "rmckr/rasputin"
+branch = "main"
+run_directory = "."
+file_paths = ["stacks/compose.mail.yaml"]
+additional_env_files = [{ path = ".env", track = false }]
+webhook_enabled = true
+
+# 5. apps
+[[stack]]
+name = "apps"
+description = "Home Assistant, Homepage, Syncthing, code-server, Dockhand, cert-server"
+deploy = true
+after = ["networks"]
+tags = ["apps"]
+[stack.config]
+server = "rasputin"
+repo = "rmckr/rasputin"
+branch = "main"
+run_directory = "."
+file_paths = ["stacks/compose.apps.yaml"]
+additional_env_files = [{ path = ".env", track = false }]
+webhook_enabled = true
