@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # CI has no age key, so the secrets themselves can only be validated
+      # locally (docs/testing.md #1); everything else runs here.
+      - name: Compose config (all stacks, throwaway env from .env.example)
+        run: |
+          awk -F= '/^[A-Z_][A-Z0-9_]*=/ { if ($2 == "") print $0 "dummy"; else print }' .env.example > .env
+          for f in stacks/compose.*.yaml; do
+            docker compose -f "$f" --env-file .env config --quiet && echo "OK $f"
+          done
+          docker compose -p komodo -f komodo/compose.yaml --env-file .env config --quiet && echo "OK komodo"
+
+      - name: Every ${VAR} referenced by compose/templates exists in .env.example
+        run: |
+          comm -23 \
+            <(grep -rhoE --include='compose*.yaml' --include='*.tmpl' '\$\{?[A-Z_][A-Z0-9_]+' services stacks komodo templates | tr -d '${' | sort -u) \
+            <(grep -oE '^[A-Z_][A-Z0-9_]*' .env.example | sort -u)
+
+      - name: Shell scripts parse
+        run: for s in scripts/*.sh scripts/docs/*.sh; do bash -n "$s" && echo "OK $s"; done
+
+      - name: stacks.toml parses
+        run: python3 -c "import tomllib; d = tomllib.load(open('komodo/resources/stacks.toml', 'rb')); assert len(d['stack']) == 5, d"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Docs templates render
+        run: bash scripts/docs/generate.sh
+
+      - name: Ansible playbook syntax check
+        run: |
+          # Pinned to the core Ubuntu's ansible package ships (2.16.x) so
+          # CI validates against what the control node actually runs; keep
+          # in sync with ansible/requirements.yml (community.docker <4).
+          pip install "ansible-core>=2.16,<2.17"
+          ansible-galaxy collection install -r ansible/requirements.yml
+          ansible-playbook -i 'localhost,' ansible/site.yml --syntax-check
