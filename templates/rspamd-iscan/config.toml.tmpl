@@ -8,15 +8,9 @@ SpamMailbox         = "INBOX.Spam"
 HamMailbox          = "INBOX.Misflagged"
 UndetectedMailbox   = "INBOX.Undetected"
 BackupMailbox       = "INBOX.Processed"
-# TempDir stores downloaded mails and their modified variants with added spam
-# headers
 TempDir             = "/tmp"
-# Set KeepTempFiles to false to delete temporary files after use immediately
 KeepTempFiles       = true
 ScanMailbox         = "INBOX.Unscanned"
-# Mails with a higher or equal rspamd score than SpamThreshold are moved to
-# SpamMailbox, others to HamMailbox
 SpamThreshold       = 10.0
-# Raw incoming and outgoing IMAP data is logged with debug log level.
-# The logged data can contain sensitive information, like credentials.
+# Raw IMAP data can contain credentials, keep this off.
 LogIMAPData         = false

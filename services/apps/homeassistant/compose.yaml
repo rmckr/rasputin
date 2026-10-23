@@ -34,27 +34,12 @@ services:
       homepage.href: https://home.${HOMELAB_DOMAIN}
       homepage.description: Home Automation
 
-  # matter-server:
-  #   image: ghcr.io/matter-js/python-matter-server:stable
-  #   container_name: matter-server
-  #   restart: unless-stopped
-  #   network_mode: host
-  #   security_opt:
-  #     - apparmor:unconfined
-  #   volumes:
-  #     - ../../../data/matter-server:/data
-  #     - /run/dbus:/run/dbus:ro
-
   matterjs-server:
     container_name: matterjs-server
     image: ghcr.io/matter-js/matterjs-server:latest
     read_only: true
     network_mode: host
     restart: unless-stopped
-    # Optional Node.js heap hint. No default — size depends on the number of
-    # commissioned nodes. See docs/docker.md "Node.js Memory Limit".
-    # environment:
-    #   NODE_OPTIONS: "--max-old-space-size=512"
     volumes:
       - "../../../data/matterjs-server:/data"
     environment:

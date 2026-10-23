@@ -1,14 +1,13 @@
 name: core
 
-# Fails the deploy instead of rendering empty hostnames when .env isn't in
-# scope. Komodo passes --env-file .env when the stack's run directory is the
-# repo root and its env file path is .env (the default).
+# Fails the deploy instead of rendering empty hostnames when .env isn't in scope.
 x-required-config: "${HOMELAB_DOMAIN:?HOMELAB_* missing from .env - run scripts/render.sh}"
 
 include:
   - ../services/core/pihole/compose.yaml
   - ../services/core/traefik/compose.yaml
   - ../services/core/unbound/compose.yaml
+  # wg-easy VPN server - temporarily disabled, will be re-enabled:
   # - ../services/core/wireguard/compose.yaml
   - ../services/core/wireguard-client/compose.yaml
 

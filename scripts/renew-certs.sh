@@ -1,13 +1,10 @@
 #!/bin/bash
-# renew-certs.sh
-# Auto-renews the homelab wildcard certificate for ${HOMELAB_DOMAIN},
-# signed by the local CA (rasputinCA).
+# Renew the wildcard cert for ${HOMELAB_DOMAIN}, signed by the local CA.
 # Usage: ./renew-certs.sh [--force]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Shared config (HOMELAB_DOMAIN) lives in the decrypted .env next to the
-# repo root; render.sh produces it.
+# HOMELAB_DOMAIN comes from the rendered .env (scripts/render.sh).
 # shellcheck disable=SC1091
 set -a; source "$SCRIPT_DIR/../.env"; set +a
 
@@ -18,12 +15,11 @@ CERT="$CERT_DIR/$DOMAIN.crt"
 KEY="$CERT_DIR/$DOMAIN.key"
 CSR="$CERT_DIR/$DOMAIN.csr"
 SAN_CONF="$CERT_DIR/rasputin_san.cnf"
-# The CA cert is public config and lives in git (served by cert-server);
-# the CA key is a secret and stays under data/certs/ca, never committed.
+# CA cert is committed (served by cert-server); key + serial stay under
+# data/certs/ca, never in git. -CAcreateserial writes the serial next to
+# the CA cert, hence the pinned path into data/.
 CA_CERT="$SCRIPT_DIR/../services/apps/cert-server/ca/rasputinCA.crt"
 CA_KEY="$ROOT_DIR/ca/rasputinCA.key"
-# -CAcreateserial writes the serial next to the CA cert, so pin it into
-# data/ rather than letting it appear in the repo.
 CA_SERIAL="$ROOT_DIR/ca/rasputinCA.srl"
 PEM="$CERT_DIR/$DOMAIN.pem"
 DAYS_LEFT=30   # Renew if less than 30 days left
@@ -65,13 +61,11 @@ else
     echo "Certificate not found or force renewal requested. Generating new one..."
 fi
 
-# Generate server key
 openssl genrsa -out "$KEY" 2048
 
-# Generate CSR
 openssl req -new -key "$KEY" -out "$CSR" -subj "/C=DE/O=Rasputin Inc./CN=$DOMAIN"
 
-# Generate SAN config
+# SAN: $DOMAIN + *.$DOMAIN
 cat > "$SAN_CONF" <<EOL
 [req]
 distinguished_name = req_distinguished_name
@@ -93,7 +87,6 @@ DNS.1 = $DOMAIN
 DNS.2 = *.$DOMAIN
 EOL
 
-# Sign CSR with CA
 openssl x509 -req -in "$CSR" \
   -CA "$CA_CERT" -CAkey "$CA_KEY" -CAserial "$CA_SERIAL" -CAcreateserial \
   -out "$CERT" -days $VALIDITY -sha256 \
