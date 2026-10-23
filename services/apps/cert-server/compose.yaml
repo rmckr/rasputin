@@ -6,13 +6,17 @@ services:
     networks:
       - proxy
     volumes:
-      # The CA cert is public config (clients must download and trust it),
-      # so it lives in git under ./ca and is served straight from here.
-      # The CA *key* stays under data/certs/ca and is never committed.
-      # Mount the directory, not the file: if the file were missing, Docker
-      # would silently create an empty directory in its place.
+      # CA cert is public config, so it lives in git and is served straight
+      # from here; the CA *key* stays under data/certs/ca, never committed.
+      # Mount the dir, not the file: a missing file would become an empty dir.
       - ./ca:/cert:ro
     restart: unless-stopped
+    healthcheck:
+      # alpine busybox wget
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/rasputinCA.crt"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     labels:
       docs.description: "Tiny web server that allows LAN clients to download local CA certs for trusting traefik"
 

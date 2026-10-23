@@ -5,6 +5,14 @@ services:
     networks:
       - dns
     restart: unless-stopped
+    healthcheck:
+      # image is FROM scratch (no shell); drill ships with the image.
+      # Answering a root SOA means recursion to the roots works.
+      test: ["CMD", "drill", "@127.0.0.1", ".", "SOA"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     volumes:
       - ./unbound.conf:/etc/unbound/unbound.conf.d/unbound.conf:ro
     labels:

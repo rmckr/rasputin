@@ -5,6 +5,7 @@ services:
     command:
       - "--api.dashboard=true"
       - "--api.insecure=true"
+      - "--ping=true" # /ping on the internal 8080 entrypoint, used by the healthcheck below
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=proxy"
@@ -30,6 +31,12 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     labels:
       docs.description: "Routing for all running docker services"
 
@@ -39,15 +46,6 @@ services:
       traefik.http.routers.traefik.service: api@internal
       traefik.http.routers.traefik.entrypoints: websecure
       traefik.http.routers.traefik.tls: "true"
-
-      # traefik.http.routers.root-redirect.rule: Host(`rasputin.pi`)
-      # traefik.http.routers.root-redirect.service: noop@internal
-      # traefik.http.routers.root-redirect.entrypoints: websecure
-      # traefik.http.routers.root-redirect.tls: true
-      # traefik.http.routers.root-redirect.middlewares: root-redirect
-      # traefik.http.routers.root-redirect.priority: 100
-      # traefik.http.middlewares.root-redirect.redirectregex.regex: "^https?://.*"
-      # traefik.http.middlewares.root-redirect.redirectregex.replacement: "https://grafana.rasputin.pi"
 
       homepage.group: Network
       homepage.name: Traefik

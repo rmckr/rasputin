@@ -13,20 +13,25 @@ services:
     environment:
       # See: https://docs.pi-hole.net/docker/configuration
       FTLCONF_dhcp_active: "false"
-      # FTLCONF_dns_cnameRecords: "admin.rasputin.pi,rasputin.pi;wireguard.rasputin.pi,rasputin.pi;traefik.rasputin.pi,rasputin.pi;influxdb.rasputin.pi,rasputin.pi;grafana.rasputin.pi,rasputin.pi;home.rasputin.pi,rasputin.pi;"
       FTLCONF_misc_dnsmasq_lines: "address=/.${HOMELAB_DOMAIN}/${HOMELAB_HOST_IP}"
       FTLCONF_dns_domain: "${HOMELAB_ROUTER_DOMAIN}"
       FTLCONF_dns_hosts: "${HOMELAB_HOST_IP} ${HOMELAB_DOMAIN}"
       FTLCONF_dns_listeningMode: "all"
       FTLCONF_dns_revServers: "true,${HOMELAB_LAN_CIDR},${HOMELAB_ROUTER_IP},${HOMELAB_ROUTER_DOMAIN}"
-      # FTLCONF_dns_upstreams: "1.1.1.1;1.0.0.1;2606:4700:4700::1111;2606:4700:4700::1001;"
       FTLCONF_dns_upstreams: "unbound;"
       FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD:?error}
       FTLCONF_webserver_port: "8080o,8443os,[::]:8080o,[::]:8443os"
       TZ: "${HOMELAB_TZ}"
     cap_add:
-      - SYS_NICE # Optional, if Pi-hole should get some more processing time
+      - SYS_NICE
     restart: unless-stopped
+    healthcheck:
+      # bash /dev/tcp - the image ships no guaranteed curl/wget
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     volumes:
       - ./whitelist.sh:/pihole/whitelist.sh
     post_start:
@@ -36,7 +41,6 @@ services:
       docs.description: "Used for local DNS for all machines in network, distributed by router DHCP"
 
       traefik.enable: "true"
-      # traefik.docker.network: proxy
 
       traefik.http.routers.pihole.rule: Host(`pihole.${HOMELAB_DOMAIN}`) || Host(`${HOMELAB_HOST_IP}`)
       traefik.http.routers.pihole.entrypoints: websecure

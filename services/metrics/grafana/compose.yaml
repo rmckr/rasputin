@@ -14,6 +14,12 @@ services:
       - ./dashboards:/etc/grafana/provisioning/dashboards
       - ../../../.runtime/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     labels:
       docs.description: "Main monitoring dashboard, uses influxdb as datasource"
 

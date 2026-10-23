@@ -17,6 +17,12 @@ services:
       - ../../../data/code-server:/config
       - ../../..:/config/workspace
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8443/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     labels:
       docs.description: "VSCode server for debugging and working on the homelab from any device"
 

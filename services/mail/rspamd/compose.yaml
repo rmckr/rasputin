@@ -11,7 +11,8 @@ services:
       - ../../../.runtime/rspamd/worker-controller.inc:/etc/rspamd/local.d/worker-controller.inc
       - ../../../data/rspamd:/var/lib/rspamd
     depends_on:
-      - rspamd-redis
+      rspamd-redis:
+        condition: service_healthy
     restart: unless-stopped
     labels:
       docs.description: "Local spam filtering used by rspamd-iscan, no actual mail pipeline, no connection to dovecot, needs connection to unbound"
@@ -39,6 +40,11 @@ services:
     volumes:
       - ../../../data/rspamd-redis:/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
 
 volumes:
   redis-data:
