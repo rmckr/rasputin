@@ -1,0 +1,8 @@
+collections:
+  # Provides community.docker.docker_compose_v2 (env_files needs >= 3.11.0).
+  # Upper bound: community.docker 4.x/5.x declare a requires_ansible newer
+  # than the core that ships with Ubuntu's ansible package (core 2.16,
+  # which CI pins too) - unbounded, galaxy grabs 5.x, which then warns and
+  # may fail mid-playbook on an unsupported core.
+  - name: community.docker
+    version: ">=3.11.0,<4"
