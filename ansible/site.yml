@@ -205,6 +205,45 @@
       changed_when: false # idempotent re-render; the path unit owns freshness
       tags: [secrets]
 
+    - name: Create host data directories and file bind-mount sources
+      # Docker creates a missing bind-mount source as a root-owned directory,
+      # even for the two file mounts (traefik's acme.json, wg-easy's
+      # wg0.json), and root ownership locks out the PUID/PGID images. This is
+      # what lets a fresh host work without rsyncing data/ from an old one.
+      ansible.builtin.command: bash scripts/init-data.sh
+      args:
+        chdir: "{{ repo_dir }}"
+      become_user: "{{ homelab_user }}"
+      changed_when: false # creates only what is missing
+      tags: [data]
+
+    - name: Check for the local CA private key
+      # Never in git (data/certs/ca/rasputinCA.key). Absent on a host that does
+      # not inherit data/ from an old one - and then the committed CA cert is
+      # unusable, because a certificate cannot sign without its key.
+      ansible.builtin.stat:
+        path: "{{ repo_dir }}/data/certs/ca/rasputinCA.key"
+      register: ca_key
+      tags: [certs]
+
+    - name: Generate a local CA and the wildcard certificate
+      ansible.builtin.command: bash scripts/init-ca.sh
+      args:
+        chdir: "{{ repo_dir }}"
+      become_user: "{{ homelab_user }}"
+      when: not ca_key.stat.exists
+      tags: [certs]
+
+    - name: Ensure the wildcard certificate exists
+      # Covers a data/ rsync that brought the CA key but not the leaf: the
+      # script is idempotent and only re-issues when missing or <30 days out.
+      ansible.builtin.command: bash scripts/renew-certs.sh
+      args:
+        chdir: "{{ repo_dir }}"
+      become_user: "{{ homelab_user }}"
+      changed_when: false # reports no change unless it actually renews
+      tags: [certs]
+
     - name: Link render automation units
       ansible.builtin.file:
         src: "{{ repo_dir }}/{{ item }}"

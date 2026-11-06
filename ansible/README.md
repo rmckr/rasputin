@@ -19,9 +19,16 @@ Idempotent — safe to re-run any time.
 6. Places the age key for root *and* the user (copied from your machine;
    it never comes from git)
 7. Runs `scripts/render.sh` → `.env` + `.runtime/`
-8. Installs + enables the `homelab-render.path` systemd unit
-9. Brings up the `networks` bootstrap stack
-10. Deploys Komodo (single `.env` env file), waits for its API
+8. Creates the `data/` directories the stacks bind-mount, plus the two file
+   mounts Docker would otherwise create as directories
+   (`scripts/init-data.sh`)
+9. Generates a local CA when there is no CA key yet (`scripts/init-ca.sh`),
+   then makes sure the wildcard cert exists (`scripts/renew-certs.sh`, only
+   re-issues when missing or <30 days out) — a generated CA must be
+   **committed** as `services/apps/cert-server/ca/rasputinCA.crt`
+10. Installs + enables the `homelab-render.path` systemd unit
+11. Brings up the `networks` bootstrap stack
+12. Deploys Komodo (single `.env` env file), waits for its API
 
 ## What it does NOT do
 
@@ -30,6 +37,10 @@ Idempotent — safe to re-run any time.
   the CA on every device. The CA *cert* is committed instead, at
   `services/apps/cert-server/ca/rasputinCA.crt`, so a fresh host can
   serve it without `data/` being in place yet.
+  Skipping the migration is supported: the playbook then generates a
+  **new** CA (step 9), which overwrites that committed cert — commit it
+  and re-trust the CA on every device. Directories and the two file
+  mounts are created either way (step 8).
 - **Create the Komodo stacks** — they are declared in
   `komodo/resources/stacks.toml` and applied by a ResourceSync, which you
   configure once (`docs/komodo.md`). The mail stack stays down until the

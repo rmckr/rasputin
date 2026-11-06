@@ -11,6 +11,11 @@ unit, the `networks` stack, and Komodo itself. See `ansible/README.md`.
 - **Addressing** — a static DHCP lease for the host in the router is
   enough; during bootstrap the host's own resolver must not depend on the
   Pi-hole it is about to provide (point it at the router).
+- **TLS trust** — a host without the old `data/certs/ca/` has no CA key, so
+  the playbook generates a new CA and overwrites
+  `services/apps/cert-server/ca/rasputinCA.crt`. Commit that file and install
+  the cert on every device (`https://certs.<domain>/rasputinCA.crt`), or
+  devices will reject every Traefik host.
 - **`data/` migration** — rsync from the previous host. `data/certs/ca/`
   holds the CA private key; losing it means re-trusting the CA on every
   device.
