@@ -4,16 +4,17 @@
 homelab:
   hosts:
     rasputin:
-      ansible_host: 192.168.2.102
+      ansible_host: 192.168.188.59
       # SSH account (must have sudo: the play runs become: true).
       # Same identity as homelab_user here; only change this if you log
       # in as someone else (root, personal account).
       ansible_user: rasputin
-      # Branch the bootstrap clone tracks (site.yml reads
-      # `repo_version | default('main')`). Uncomment here (host var) or
-      # under `homelab: vars:` (group var) - both tested working. NOT at
-      # top level: Ansible skips top-level scalars as invalid groups.
-      repo_version: test/deploy-vm
+      # Branch the bootstrap clone tracks. Left unset on purpose: site.yml
+      # reads `repo_version | default('main')`, so the host follows main.
+      # To test a branch, uncomment here (host var) or set it under
+      # `homelab: vars:` (group var) - both tested working. NOT at top
+      # level: Ansible skips top-level scalars as invalid groups.
+      # repo_version: some-branch
 # homelab_user (the host service account the playbook creates - default
 # rasputin) is a play var in site.yml, so inventory cannot override it;
 # use -e homelab_user=othername.
