@@ -95,6 +95,14 @@ services:
       PERIPHERY_ROOT_DIRECTORY: /etc/komodo
       # Whitelist a stable mount for accurate disk usage reporting
       PERIPHERY_INCLUDE_DISK_MOUNTS: /etc/hostname
+      # This clone is owned by the homelab user (ansible/ chowns it) while
+      # periphery runs as root, so git >= 2.35 refuses it with "detected
+      # dubious ownership" and every repo based deploy fails. Injected via
+      # GIT_CONFIG_* so the exception survives container recreation - a
+      # `git config --global` inside the container does not.
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /etc/komodo/repos/rasputin
     volumes:
       # Core / Periphery communication keys
       - keys:/config/keys

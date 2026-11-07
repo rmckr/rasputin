@@ -14,6 +14,12 @@ the service compose files resolve for the host docker daemon. If you clone
 elsewhere, update the mount in `komodo/compose.yaml` plus the paths in
 `scripts/systemd/` (hardcoded) and `repo_dir` in `ansible/site.yml`.
 
+Periphery runs as root but the clone belongs to the homelab user, which git
+>= 2.35 rejects as "detected dubious ownership". `komodo/compose.yaml` pins
+`safe.directory` for that path through `GIT_CONFIG_*` environment variables, so
+the exception survives container recreation - a `git config --global` inside
+the container does not.
+
 ## Bootstrap
 
 `ansible/` does all of this automatically. Manually:
