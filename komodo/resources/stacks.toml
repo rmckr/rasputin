@@ -10,8 +10,15 @@
 # https://komo.do/docs/automate/sync-resources
 #
 # Gotchas:
-# - run_directory = "." is the repo root, i.e. where Periphery clones it
-#   (/etc/komodo/repos/rasputin); file_paths are relative to it.
+# - run_directory and clone_path are ABSOLUTE on purpose. A relative
+#   run_directory resolves against Periphery's stack directory
+#   (${PERIPHERY_ROOT_DIRECTORY}/stacks/<stack>, e.g.
+#   /etc/komodo/stacks/networks) - not against the clone - and fails the
+#   deploy with "Failed to validate run directory on host after stack write
+#   (canonicalize error)" because that directory does not exist.
+#   clone_path pins Komodo's pull to the same tree the playbook clones, so
+#   the deploy runs the commit Komodo just pulled; file_paths are relative
+#   to run_directory.
 # - additional_env_files track = false: .env is written by scripts/render.sh
 #   (SOPS decrypt), not by Komodo - passed to compose as --env-file, never
 #   read, diffed or validated. Leave each stack's own Environment field
@@ -33,7 +40,8 @@ tags = ["bootstrap"]
 server = "rasputin"
 repo = "rmckr/rasputin"
 branch = "main"
-run_directory = "."
+clone_path = "/etc/komodo/repos/rasputin"
+run_directory = "/etc/komodo/repos/rasputin"
 file_paths = ["stacks/compose.networks.yaml"]
 # One-shot container that exits right after creating the networks.
 ignore_services = ["networks-init"]
@@ -51,7 +59,8 @@ tags = ["core"]
 server = "rasputin"
 repo = "rmckr/rasputin"
 branch = "main"
-run_directory = "."
+clone_path = "/etc/komodo/repos/rasputin"
+run_directory = "/etc/komodo/repos/rasputin"
 file_paths = ["stacks/compose.core.yaml"]
 additional_env_files = [{ path = ".env", track = false }]
 webhook_enabled = true
@@ -67,7 +76,8 @@ tags = ["observability"]
 server = "rasputin"
 repo = "rmckr/rasputin"
 branch = "main"
-run_directory = "."
+clone_path = "/etc/komodo/repos/rasputin"
+run_directory = "/etc/komodo/repos/rasputin"
 file_paths = ["stacks/compose.metrics.yaml"]
 additional_env_files = [{ path = ".env", track = false }]
 webhook_enabled = true
@@ -83,7 +93,8 @@ tags = ["mail"]
 server = "rasputin"
 repo = "rmckr/rasputin"
 branch = "main"
-run_directory = "."
+clone_path = "/etc/komodo/repos/rasputin"
+run_directory = "/etc/komodo/repos/rasputin"
 file_paths = ["stacks/compose.mail.yaml"]
 additional_env_files = [{ path = ".env", track = false }]
 webhook_enabled = true
@@ -99,7 +110,8 @@ tags = ["apps"]
 server = "rasputin"
 repo = "rmckr/rasputin"
 branch = "main"
-run_directory = "."
+clone_path = "/etc/komodo/repos/rasputin"
+run_directory = "/etc/komodo/repos/rasputin"
 file_paths = ["stacks/compose.apps.yaml"]
 additional_env_files = [{ path = ".env", track = false }]
 webhook_enabled = true
