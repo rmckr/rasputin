@@ -10,7 +10,8 @@
 #
 # NOT covered (on purpose): data/ migration from the old host, creating
 # the stack resources (declared in komodo/resources/stacks.toml, applied
-# by Komodo's ResourceSync), VM networking.
+# by Komodo's ResourceSync), IPv4 addressing/DHCP. IPv6 arrives by SLAAC;
+# set host_ipv6 to additionally pin a static address (see vars below).
 #
 # Run (flags explained in ansible/README.md):
 #   control node:  ansible-playbook site.yml -i inventory.yml -K
@@ -31,6 +32,12 @@
     # sops is not packaged in Debian; install the official binary.
     sops_version: "3.13.3"
     host_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+    # Interface the optional static IPv6 is added to. Facts give the one
+    # holding the default route, so this follows the host's own setup.
+    host_ipv6_interface: "{{ ansible_default_ipv4.interface | default('eth0') }}"
+    # host_ipv6 itself is NOT declared here: a play var outranks inventory,
+    # which would make it impossible to set per host. Read below as
+    # `host_ipv6 | default('')`; set it in inventory.yml or with -e.
 
   tasks:
     # python3-apt must exist before ansible.builtin.apt can run, so it
@@ -148,6 +155,62 @@
         mode: "0644"
       notify: Apply sysctl
       tags: [sysctl]
+
+    - name: Install static IPv6 unit (only when host_ipv6 is set)
+      # The router hands out SLAAC only (no DHCPv6 reservations), which
+      # derives the interface ID from the NIC MAC - so a stable address has
+      # to be configured here. A unit instead of a network-manager config
+      # keeps this working whichever stack owns the interface (networkd,
+      # NetworkManager, ifupdown, or none of them).
+      ansible.builtin.copy:
+        content: |
+          # Written by ansible/site.yml from host_ipv6 - do not edit.
+          [Unit]
+          Description=Static IPv6 for the homelab host
+          After=network-online.target
+          Wants=network-online.target
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          # replace, not add: idempotent across reboots and re-runs
+          ExecStart=/bin/sh -c 'ip -6 addr replace {{ host_ipv6 }} dev {{ host_ipv6_interface }}'
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/homelab-ipv6.service
+        mode: "0644"
+      when: host_ipv6 | default('') | length > 0
+      notify: Reload systemd
+      tags: [ipv6]
+
+    - name: Enable static IPv6 unit
+      ansible.builtin.systemd_service:
+        name: homelab-ipv6.service
+        enabled: true
+        state: started
+        daemon_reload: true
+      when: host_ipv6 | default('') | length > 0
+      tags: [ipv6]
+
+    - name: Disable static IPv6 unit when host_ipv6 is unset
+      ansible.builtin.systemd_service:
+        name: homelab-ipv6.service
+        enabled: false
+        state: stopped
+      when: host_ipv6 | default('') | length == 0
+      failed_when: false # never installed on this host
+      tags: [ipv6]
+
+    - name: Remove static IPv6 unit when host_ipv6 is unset
+      # Stopping leaves the address until the next reboot; unsetting the
+      # var only means the playbook stops maintaining it.
+      ansible.builtin.file:
+        path: /etc/systemd/system/homelab-ipv6.service
+        state: absent
+      when: host_ipv6 | default('') | length == 0
+      notify: Reload systemd
+      tags: [ipv6]
 
     - name: Clone repository (this is the path Komodo's periphery pulls)
       ansible.builtin.git:

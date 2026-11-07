@@ -11,6 +11,12 @@ unit, the `networks` stack, and Komodo itself. See `ansible/README.md`.
 - **Addressing** — a static DHCP lease for the host in the router is
   enough; during bootstrap the host's own resolver must not depend on the
   Pi-hole it is about to provide (point it at the router).
+- **IPv6** — FRITZ!OS hands out SLAAC only, so the interface ID is derived
+  from the NIC MAC and changes if the guest is rebuilt. Set `host_ipv6` in
+  `ansible/inventory.yml` to pin a stable ULA (`fdff:150a:4884::3/64` matches
+  `INIT_DNS` in `services/core/wireguard/compose.yaml`); the playbook installs
+  a small unit for it. Point the router's IPv6 DNS field at that address,
+  otherwise IPv6-first clients bypass Pi-hole.
 - **TLS trust** — a host without the old `data/certs/ca/` has no CA key, so
   the playbook generates a new CA and overwrites
   `services/apps/cert-server/ca/rasputinCA.crt`. Commit that file and install

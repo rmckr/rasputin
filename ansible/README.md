@@ -13,7 +13,9 @@ Idempotent — safe to re-run any time.
    release checksums file (sops is not packaged in Debian)
 3. Ensures the homelab user exists (in `sudo`/`docker`)
 4. Enables IPv4/IPv6 forwarding and WireGuard policy routing via
-   `/etc/sysctl.d/99-homelab.conf`
+   `/etc/sysctl.d/99-homelab.conf`, and — when `host_ipv6` is set — pins
+   that static IPv6 with a small `homelab-ipv6.service` unit (the router
+   hands out SLAAC only, which ties the address to the NIC MAC)
 5. Clones this repo to `/etc/komodo/repos/rasputin` — the path Komodo's
    periphery pulls into
 6. Places the age key for root *and* the user (copied from your machine;
@@ -47,6 +49,8 @@ Idempotent — safe to re-run any time.
   sync has run.
 - **Configure VM networking** — use a static DHCP lease in your router
   (ideally keeping `192.168.188.3`), Proxmox bridge/VLAN settings, etc.
+  The single exception is the optional `host_ipv6` var (step 4): there is
+  no router-side equivalent for IPv6, so it is configured on the host.
 
 ## Prerequisites
 
@@ -100,7 +104,9 @@ Useful switches: `--check` works (the networks/Komodo steps use
 `docker_compose_v2`, which supports check mode),
 `-e homelab_user=otheruser`,
 `-e repo_version=otherbranch` (bootstrap clone branch; can also be set
-as an inventory var, unlike `homelab_user`).
+as an inventory var, unlike `homelab_user`), and
+`-e host_ipv6=fdff:150a:4884::3/64` (likewise settable in `inventory.yml`;
+unset means the host keeps only its SLAAC addresses).
 
 ## After it finishes
 

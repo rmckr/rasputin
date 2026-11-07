@@ -11,6 +11,12 @@ homelab:
       ansible_user: rasputin
       # Branch the bootstrap clone tracks. Left unset on purpose: site.yml
       # reads `repo_version | default('main')`, so the host follows main.
+      # Optional static IPv6, pinned on top of the SLAAC addresses the
+      # router hands out (FRITZ!OS has no DHCPv6 reservations, so a stable
+      # address has to be configured on the host). site.yml only maintains
+      # the address when this is set. The value below matches INIT_DNS in
+      # services/core/wireguard/compose.yaml.
+      # host_ipv6: fdff:150a:4884::3/64
       # To test a branch, uncomment here (host var) or set it under
       # `homelab: vars:` (group var) - both tested working. NOT at top
       # level: Ansible skips top-level scalars as invalid groups.
