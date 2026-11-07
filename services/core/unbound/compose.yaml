@@ -14,7 +14,7 @@ services:
       retries: 3
       start_period: 10s
     volumes:
-      - ./unbound.conf:/etc/unbound/unbound.conf.d/unbound.conf:ro
+      - ./unbound.conf:/etc/unbound/custom.conf.d/unbound.conf:ro
     labels:
       docs.description: "Upstream DNS for pihole, also used by rspamd"
 
