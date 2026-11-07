@@ -8,14 +8,15 @@ secrets. Recipients are defined in `.sops.yaml`; only `HOMELAB_*` keys stay
 readable, everything else is sealed by default — including keys added later.
 
 Needs: `sops`, `envsubst` (package `gettext-base`), and an age key at
-`~/.config/age/key.txt` (override with `SOPS_AGE_KEY_FILE`; the systemd unit
-keeps its copy at `/root/.config/age/key.txt`).
+`~/.config/sops/age/keys.txt` (sops' default location; override with
+`SOPS_AGE_KEY_FILE`; the systemd unit keeps its copy at
+`/root/.config/sops/age/keys.txt`).
 
 ## Workflow
 
 ```bash
 # decrypt - or just run scripts/render.sh, which also renders templates/
-export SOPS_AGE_KEY_FILE="$HOME/.config/age/key.txt"  # key.txt, not sops' default keys.txt
+export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"  # sops' default location
 sops --decrypt --input-type dotenv --output-type dotenv .env.enc > .env
 
 # after editing .env
@@ -35,7 +36,7 @@ sops --encrypt --input-type dotenv --output-type dotenv .env > .env.enc
 
 The two recipients in `.sops.yaml`:
 
-1. Primary age key (`~/.config/age/key.txt`) — back it up off this machine.
+1. Primary age key (`~/.config/sops/age/keys.txt`) — back it up off this machine.
    **Losing all keys means losing the secrets in this repo.**
 2. Offline recovery recipient — private key stored off-site (password
    manager, printed, ...).

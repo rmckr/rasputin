@@ -22,7 +22,7 @@ if ! command -v envsubst &>/dev/null; then
 fi
 
 # .env.enc is SOPS-encrypted (age backend), see .sops.yaml
-export SOPS_AGE_KEY_FILE="${SOPS_AGE_KEY_FILE:-$HOME/.config/age/key.txt}"
+export SOPS_AGE_KEY_FILE="${SOPS_AGE_KEY_FILE:-$HOME/.config/sops/age/keys.txt}"
 sops --decrypt --input-type dotenv --output-type dotenv "$ENV_FILE.enc" > "$ENV_FILE"
 
 if [[ ! -d "$TEMPLATES_DIR" ]]; then

@@ -46,7 +46,7 @@ Idempotent — safe to re-run any time.
   configure once (`docs/komodo.md`). The mail stack stays down until the
   sync has run.
 - **Configure VM networking** — use a static DHCP lease in your router
-  (ideally keeping `192.168.188.2`), Proxmox bridge/VLAN settings, etc.
+  (ideally keeping `192.168.188.3`), Proxmox bridge/VLAN settings, etc.
 
 ## Prerequisites
 
@@ -61,8 +61,8 @@ Idempotent — safe to re-run any time.
   usual Windows setup: WSL, the Proxmox shell, or the guest itself.
 - The `community.docker` collection:
   `ansible-galaxy collection install -r requirements.yml`
-- The age key file on that machine: default `~/.config/age/key.txt`,
-  override with `-e age_key_source=/path/to/key.txt`
+- The age key file on that machine: default `~/.config/sops/age/keys.txt`
+  (sops' default location), override with `-e age_key_source=/path/to/keys.txt`
 - `sshpass` for password auth (`-k`): `sudo apt install sshpass`.
   Not needed with key-based SSH; Ansible's `ssh` connection cannot
   prompt for a password itself.
@@ -78,9 +78,9 @@ ansible-playbook site.yml -i inventory.yml -K
 
 # ...or from the host itself (as root - become then needs no password,
 # hence no -K):
-scp ~/.config/age/key.txt root@<host>:/root/key.txt
+scp ~/.config/sops/age/keys.txt root@<host>:/root/keys.txt
 # on the host: apt install ansible, then
-ansible-playbook site.yml -i 'localhost,' -c local -e age_key_source=/root/key.txt
+ansible-playbook site.yml -i 'localhost,' -c local -e age_key_source=/root/keys.txt
 ```
 
 `-K` passes `ansible_user`'s sudo password: Debian's default sudoers
@@ -94,7 +94,7 @@ path: WSL's `/mnt/c` is world-writable, so Ansible ignores `ansible.cfg`
 there and silently loses the inventory - passing it explicitly is
 harmless everywhere. On WSL, point `age_key_source` at the Windows-side
 key too (WSL's `~` is a different home):
-`-e age_key_source=/mnt/c/Users/<you>/.config/age/key.txt`.
+`-e age_key_source=/mnt/c/Users/<you>/.config/sops/age/keys.txt`.
 
 Useful switches: `--check` works (the networks/Komodo steps use
 `docker_compose_v2`, which supports check mode),
@@ -110,6 +110,7 @@ as an inventory var, unlike `homelab_user`).
    branch `main`, resource path `komodo/resources`) and confirm it: the
    5 stacks from `komodo/resources/stacks.toml` are then created and
    deployed, `networks` first
-3. rsync `data/` from the old host, then cut over: old host down, new
-   host on the same IP. Verify DNS → Traefik → WireGuard → mail sync
-   before decommissioning anything.
+3. rsync `data/` from the old host, set the router's DHCP DNS to the new
+   host, then cut over: old host down, new host at its address
+   (`HOMELAB_HOST_IP` in `.env.enc`, currently `192.168.188.3`). Verify
+   DNS → Traefik → WireGuard → mail sync before decommissioning anything.

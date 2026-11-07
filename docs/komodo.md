@@ -71,8 +71,8 @@ needs the age key too:
 
 ```bash
 cd /etc/komodo/repos/rasputin
-sudo mkdir -p /root/.config/age
-sudo install -m 600 ~/.config/age/key.txt /root/.config/age/key.txt
+sudo mkdir -p /root/.config/sops/age
+sudo install -m 600 ~/.config/sops/age/keys.txt /root/.config/sops/age/keys.txt
 sudo ln -s "$PWD"/scripts/systemd/homelab-render.path /etc/systemd/system/
 sudo ln -s "$PWD"/scripts/systemd/homelab-render.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now homelab-render.path

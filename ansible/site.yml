@@ -27,7 +27,7 @@
     homelab_user: rasputin
     # Where the age key lives on the machine the playbook runs FROM.
     # It is copied to the target (root + user); never comes from git.
-    age_key_source: "{{ lookup('env', 'HOME') }}/.config/age/key.txt"
+    age_key_source: "{{ lookup('env', 'HOME') }}/.config/sops/age/keys.txt"
     # sops is not packaged in Debian; install the official binary.
     sops_version: "3.13.3"
     host_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
@@ -173,8 +173,8 @@
         group: "{{ item.owner }}"
         mode: "0700"
       loop:
-        - { path: /root/.config/age, owner: root }
-        - { path: "/home/{{ homelab_user }}/.config/age", owner: "{{ homelab_user }}" }
+        - { path: /root/.config/sops/age, owner: root }
+        - { path: "/home/{{ homelab_user }}/.config/sops/age", owner: "{{ homelab_user }}" }
       tags: [secrets]
 
     - name: Deploy age key (root for the unit, user for manual use)
@@ -188,8 +188,8 @@
         group: "{{ item.group }}"
         mode: "0600"
       loop:
-        - { dest: /root/.config/age/key.txt, owner: root, group: root }
-        - { dest: "/home/{{ homelab_user }}/.config/age/key.txt", owner: "{{ homelab_user }}", group: "{{ homelab_user }}" }
+        - { dest: /root/.config/sops/age/keys.txt, owner: root, group: root }
+        - { dest: "/home/{{ homelab_user }}/.config/sops/age/keys.txt", owner: "{{ homelab_user }}", group: "{{ homelab_user }}" }
       no_log: true
       tags: [secrets]
 
@@ -201,7 +201,7 @@
         chdir: "{{ repo_dir }}"
       become_user: "{{ homelab_user }}"
       environment:
-        SOPS_AGE_KEY_FILE: "/home/{{ homelab_user }}/.config/age/key.txt"
+        SOPS_AGE_KEY_FILE: "/home/{{ homelab_user }}/.config/sops/age/keys.txt"
       changed_when: false # idempotent re-render; the path unit owns freshness
       tags: [secrets]
 

@@ -17,7 +17,7 @@ for f in stacks/compose.*.yaml; do docker compose -f "$f" --env-file .env config
 docker compose -p komodo -f komodo/compose.yaml --env-file .env config --quiet && echo "OK komodo"
 
 # Secrets still decrypt (age key + MAC intact):
-SOPS_AGE_KEY_FILE=~/.config/age/key.txt \
+SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt \
   sops --decrypt --input-type dotenv --output-type dotenv .env.enc > /dev/null && echo "env OK"
 
 # Templates render; the diff shows exactly what a deploy would pick up:

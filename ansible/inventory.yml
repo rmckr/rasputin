@@ -4,7 +4,7 @@
 homelab:
   hosts:
     rasputin:
-      ansible_host: 192.168.188.59
+      ansible_host: 192.168.188.3
       # SSH account (must have sudo: the play runs become: true).
       # Same identity as homelab_user here; only change this if you log
       # in as someone else (root, personal account).
