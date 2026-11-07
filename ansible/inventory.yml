@@ -16,7 +16,7 @@ homelab:
       # address has to be configured on the host). site.yml only maintains
       # the address when this is set. The value below matches INIT_DNS in
       # services/core/wireguard/compose.yaml.
-      # host_ipv6: fdff:150a:4884::3/64
+      host_ipv6: fdff:150a:4884::3/64
       # To test a branch, uncomment here (host var) or set it under
       # `homelab: vars:` (group var) - both tested working. NOT at top
       # level: Ansible skips top-level scalars as invalid groups.
