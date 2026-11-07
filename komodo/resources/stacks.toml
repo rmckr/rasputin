@@ -27,6 +27,14 @@
 #   Set project_name in [stack.config] to match a stack previously brought up
 #   by hand under a different name - otherwise Komodo deploys a second copy
 #   and the ports collide.
+# - run_build = true on the stacks with a build: section (mail, metrics).
+#   By default Komodo runs plain `docker compose up -d`, which builds an image
+#   only when it is missing - a changed Dockerfile or build context (imapsync's
+#   supercronic arch, its COPY ./crontab) would be ignored and the old image
+#   silently reused. run_build makes Komodo run `docker compose build` first:
+#   cache-backed, so unchanged services are no-ops and up recreates only the
+#   ones whose image changed. build_extra_args adds flags, eg ["--pull"] to
+#   refresh base images too.
 # - git_account omitted: the repo is public. webhook_enabled is inert until
 #   the GitHub webhook exists.
 
@@ -79,6 +87,8 @@ branch = "main"
 clone_path = "/etc/komodo/repos/rasputin"
 run_directory = "/etc/komodo/repos/rasputin"
 file_paths = ["stacks/compose.metrics.yaml"]
+# wg-clients and pihole-influxdb-monitor are built locally.
+run_build = true
 additional_env_files = [{ path = ".env", track = false }]
 webhook_enabled = true
 
@@ -96,6 +106,9 @@ branch = "main"
 clone_path = "/etc/komodo/repos/rasputin"
 run_directory = "/etc/komodo/repos/rasputin"
 file_paths = ["stacks/compose.mail.yaml"]
+# imapsync is built locally: run `docker compose build` on deploy so
+# Dockerfile / crontab edits actually land.
+run_build = true
 additional_env_files = [{ path = ".env", track = false }]
 webhook_enabled = true
 

@@ -65,6 +65,15 @@ Notes on the declarations:
 - The project name defaults to the stack name (`-p core`, ...). Set
   `project_name` if a stack was previously brought up by hand under a
   different name, or the ports collide.
+- `run_build = true` on `mail` and `metrics`, the two stacks with a
+  `build:` section (imapsync; wg-clients, pihole-influxdb-monitor). By
+  default Komodo runs plain `docker compose up -d`, which builds an image
+  **only when it is missing**, so a changed Dockerfile or build context
+  (imapsync's arch, its `COPY ./crontab`) is ignored and the old image reused
+  indefinitely. With `run_build`, Komodo runs `docker compose build` first —
+  cache-backed, so unchanged services are no-ops — and `up` then recreates
+  only the services whose image changed. `build_extra_args = ["--pull"]`
+  would additionally refresh the base images.
 
 ## Secrets re-render on pull
 
