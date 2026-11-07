@@ -42,8 +42,6 @@ services:
     restart: unless-stopped
     volumes:
       - "../../../data/matterjs-server:/data"
-    environment:
-      PRIMARY_INTERFACE: ${HOMELAB_LAN_INTERFACE}
     labels:
       docs.description: "Used for matter support, in the same compose file as homeassistant"
       

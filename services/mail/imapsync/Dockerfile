@@ -39,9 +39,9 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG SUPERCRONIC_VERSION=0.2.29
-ARG TARGETARCH=arm64
+
 # Install supercronic
-RUN wget -q "https://github.com/aptible/supercronic/releases/download/v${SUPERCRONIC_VERSION}/supercronic-linux-${TARGETARCH}" \
+RUN wget -q "https://github.com/aptible/supercronic/releases/download/v${SUPERCRONIC_VERSION}/supercronic-linux-$(dpkg --print-architecture)" \
     -O /usr/local/bin/supercronic && \
     chmod +x /usr/local/bin/supercronic
 ENV TZ=Europe/Berlin
