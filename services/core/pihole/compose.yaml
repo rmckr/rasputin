@@ -13,7 +13,7 @@ services:
     environment:
       # See: https://docs.pi-hole.net/docker/configuration
       FTLCONF_dhcp_active: "false"
-      FTLCONF_misc_dnsmasq_lines: "address=/.${HOMELAB_DOMAIN}/${HOMELAB_HOST_IP}"
+      FTLCONF_misc_dnsmasq_lines: "address=/.${HOMELAB_DOMAIN}/${HOMELAB_HOST_IP};server=/${HOMELAB_ROUTER_DOMAIN}/${HOMELAB_ROUTER_IP}"
       FTLCONF_dns_domain: "${HOMELAB_ROUTER_DOMAIN}"
       FTLCONF_dns_hosts: "${HOMELAB_HOST_IP} ${HOMELAB_DOMAIN}"
       FTLCONF_dns_listeningMode: "all"
