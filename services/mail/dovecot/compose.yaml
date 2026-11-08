@@ -1,7 +1,7 @@
 services:
   dovecot:
     container_name: dovecot
-    image: dovecot/dovecot:latest
+    image: dovecot/dovecot:2.4.4
     restart: unless-stopped
     healthcheck:
       # doveinfo talks to the running master; fails if it is down
