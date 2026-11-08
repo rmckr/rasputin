@@ -32,7 +32,7 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/ping"]
       interval: 30s
       timeout: 5s
       retries: 3
