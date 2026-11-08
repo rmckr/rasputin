@@ -43,9 +43,10 @@ services:
       traefik.enable: "true"
 
       traefik.http.routers.traefik.rule: Host(`traefik.${HOMELAB_DOMAIN}`)
-      traefik.http.routers.traefik.service: api@internal
+      traefik.http.routers.traefik.service: traefik-dashboard
       traefik.http.routers.traefik.entrypoints: websecure
       traefik.http.routers.traefik.tls: "true"
+      traefik.http.services.traefik-dashboard.loadbalancer.server.port: "8080"
 
       homepage.group: Network
       homepage.name: Traefik
