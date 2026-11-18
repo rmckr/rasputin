@@ -8,6 +8,7 @@ include:
   - ../services/apps/homeassistant/compose.yaml
   - ../services/apps/homepage/compose.yaml
   - ../services/apps/syncthing/compose.yaml
+  - ../services/apps/reactive-resume/compose.yaml
 
 networks:
   proxy:

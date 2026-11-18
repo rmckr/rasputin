@@ -1,0 +1,48 @@
+services:
+  reactive-resume:
+    image: amruthpillai/reactive-resume:latest
+    container_name: reactive-resume
+    restart: unless-stopped
+    environment:
+      - APP_URL=resume.${HOMELAB_DOMAIN}
+      - POSTGRES_PASSWORD=${REACTIVE_RESUME_POSTGRES_PASSWORD:?error}
+      - DATABASE_URL=${REACTIVE_RESUME_DATABASE_URL:?error}
+      - AUTH_SECRET=${REACTIVE_RESUME_AUTH_SECRET:?error}
+    volumes:
+      - ../../../data/reactive-resume:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      docs.description: "Interactive resume builder"
+
+      traefik.enable: "true"
+      traefik.docker.network: proxy
+
+      traefik.http.routers.reactive-resume.rule: Host(`resume.${HOMELAB_DOMAIN}`)
+      traefik.http.routers.reactive-resume.entrypoints: websecure
+      traefik.http.routers.reactive-resume.tls: "true"
+
+      traefik.http.services.reactive-resume.loadbalancer.server.port: 3000
+
+      homepage.group: Apps
+      homepage.name: Reactive Resume
+      homepage.icon: reactive-resume-light
+      homepage.href: https://resume.${HOMELAB_DOMAIN}
+      homepage.description: Interactive Resume Builder
+
+  postgres:
+    image: postgres:18
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${REACTIVE_RESUME_POSTGRES_PASSWORD:?error}
+    volumes:
+      - ../../../data/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
