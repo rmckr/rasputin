@@ -4,10 +4,10 @@ services:
     container_name: reactive-resume
     restart: unless-stopped
     environment:
-      - APP_URL: https://resume.${HOMELAB_DOMAIN}
-      - POSTGRES_PASSWORD: ${REACTIVE_RESUME_POSTGRES_PASSWORD:?error}
-      - DATABASE_URL: ${REACTIVE_RESUME_DATABASE_URL:?error}
-      - AUTH_SECRET: ${REACTIVE_RESUME_AUTH_SECRET:?error}
+      APP_URL: https://resume.${HOMELAB_DOMAIN}
+      POSTGRES_PASSWORD: ${REACTIVE_RESUME_POSTGRES_PASSWORD:?error}
+      DATABASE_URL: ${REACTIVE_RESUME_DATABASE_URL:?error}
+      AUTH_SECRET: ${REACTIVE_RESUME_AUTH_SECRET:?error}
     volumes:
       - ../../../data/reactive-resume:/app/data
     depends_on:
