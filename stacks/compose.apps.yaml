@@ -7,7 +7,6 @@ include:
   - ../services/apps/code-server/compose.yaml
   - ../services/apps/homeassistant/compose.yaml
   - ../services/apps/homepage/compose.yaml
-  - ../services/apps/dockhand/compose.yaml
   - ../services/apps/syncthing/compose.yaml
 
 networks:
