@@ -2,6 +2,9 @@ services:
   reactive-resume:
     image: amruthpillai/reactive-resume:latest
     container_name: reactive-resume
+    networks:
+      - proxy
+      - reactive-resume
     restart: unless-stopped
     environment:
       APP_URL: https://resume.${HOMELAB_DOMAIN}
@@ -34,6 +37,8 @@ services:
   postgres:
     image: postgres:18
     container_name: postgres
+    networks:
+      - reactive-resume
     restart: unless-stopped
     environment:
       POSTGRES_DB: postgres
@@ -42,7 +47,14 @@ services:
     volumes:
       - ../../../data/postgres:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
       interval: 10s
       timeout: 5s
       retries: 10
+
+networks:
+  proxy:
+    external: true
+  reactive-resume:
+    name: reactive-resume
+    internal: true
